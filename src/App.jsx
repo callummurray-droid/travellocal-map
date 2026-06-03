@@ -3,18 +3,30 @@ import Nav from './components/Nav';
 import HeroScene from './components/HeroScene';
 import MapScene from './components/MapScene';
 import ParticleTransition from './components/ParticleTransition';
+import { gsap } from 'gsap';
 
 export default function App() {
-  const [phase, setPhase]               = useState('hero');
+  const [phase, setPhase]                   = useState('hero');
   const [particleActive, setParticleActive] = useState(false);
-  const capturedCardsRef                = useRef([]);
+  const capturedCardsRef                    = useRef([]);
+  const heroWrapRef                         = useRef(null);
 
-  // HeroScene calls this with the real card positions captured at click time
   const handleExplore = (capturedCards) => {
     capturedCardsRef.current = capturedCards;
     setPhase('transitioning');
-    // Small delay so hero fade-out starts first, then canvas takes over
-    setTimeout(() => setParticleActive(true), 300);
+
+    // Fade hero wrapper out gently while canvas fades in
+    if (heroWrapRef.current) {
+      gsap.to(heroWrapRef.current, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power2.in',
+        delay: 0.25,
+      });
+    }
+
+    // Start particles — slight delay so hero fade starts first
+    setTimeout(() => setParticleActive(true), 200);
   };
 
   const handleParticleComplete = () => {
@@ -27,7 +39,11 @@ export default function App() {
       <Nav />
 
       {(phase === 'hero' || phase === 'transitioning') && (
-        <div className="absolute inset-0" style={{ zIndex: 20 }}>
+        <div
+          ref={heroWrapRef}
+          className="absolute inset-0"
+          style={{ zIndex: 20 }}
+        >
           <HeroScene onExplore={handleExplore} />
         </div>
       )}

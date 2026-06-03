@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 
-const DURATION = 3600;
+const DURATION = 4200;
 
 export default function ParticleTransition({ active, capturedCards, onComplete }) {
-  const canvasRef = useRef(null);
-  const rafRef    = useRef(null);
+  const canvasRef  = useRef(null);
+  const rafRef     = useRef(null);
 
   useEffect(() => {
     if (!active || !capturedCards?.length) return;
@@ -18,58 +18,71 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
     const cx = canvas.width  / 2;
     const cy = canvas.height / 2;
 
-    // Preload all unique images
-    const srcSet = [...new Set(capturedCards.map(c => c.src))];
-    const imgMap = {};
-    let loaded = 0;
+    // Cache gradient once — not inside animation loop
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0,   '#13294B');
+    grad.addColorStop(0.5, '#162d4a');
+    grad.addColorStop(1,   '#192f48');
+
+    // Cache vignette gradient once
+    const vignette = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(canvas.width, canvas.height) * 0.7);
+    vignette.addColorStop(0,   'rgba(13,24,41,0.82)');
+    vignette.addColorStop(0.5, 'rgba(13,24,41,0.45)');
+    vignette.addColorStop(1,   'rgba(13,24,41,0)');
+
+    // Preload images properly using a map
+    const srcSet  = [...new Set(capturedCards.map(c => c.src))];
+    const imgMap  = {};
+    let   pending = srcSet.length;
+
+    const onLoaded = () => {
+      pending--;
+      if (pending <= 0) init();
+    };
 
     srcSet.forEach(src => {
       const img = new Image();
+      imgMap[src] = img;
+      if (img.complete && img.naturalWidth) { onLoaded(); return; }
+      img.onload  = onLoaded;
+      img.onerror = onLoaded;
       img.src = src;
-      img.onload  = () => { imgMap[src] = img; loaded++; if (loaded === srcSet.length) init(); };
-      img.onerror = () => { loaded++; if (loaded === srcSet.length) init(); };
     });
-    if (srcSet.every(src => { const i = new Image(); i.src = src; return i.complete; })) {
-      srcSet.forEach(src => { const i = new Image(); i.src = src; imgMap[src] = i; });
-      init();
-    }
+
+    // If all already cached
+    if (pending <= 0) init();
 
     function init() {
-      // Build particles directly from captured card positions
-      // Each visible card becomes a particle starting at its exact screen location
       const particles = capturedCards.map((card, i) => ({
-        img:    imgMap[card.src] || new Image(),
-        sx:     card.x,           // real screen X centre
-        sy:     card.y,           // real screen Y centre
-        sw:     card.w,           // real card width
-        sh:     card.h,           // real card height
-        // End — converge tightly at screen centre
-        ex:     cx + (Math.random() - 0.5) * 60,
-        ey:     cy + (Math.random() - 0.5) * 60,
-        startRotation: 0,         // starts at natural angle
-        endRotation:   (Math.random() - 0.5) * 540,
-        delay: i * (0.18 / capturedCards.length), // stagger so they don't all start at once
+        img:   imgMap[card.src],
+        sx:    card.x,
+        sy:    card.y,
+        sw:    card.w,
+        sh:    card.h,
+        ex:    cx + (Math.random() - 0.5) * 50,
+        ey:    cy + (Math.random() - 0.5) * 50,
+        endRotation: (Math.random() - 0.5) * 480,
+        // Stagger spread across first 25% of animation
+        delay: (i / capturedCards.length) * 0.25,
       }));
 
       let startTime = null;
 
-      function easeInOut(t) {
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      }
+      // Ease — slow start, accelerates into centre
+      function easeIn(t) { return t * t * t; }
 
-      function drawRoundedImage(ctx, img, x, y, w, h, r) {
-        if (!img || !img.complete || !img.naturalWidth) return;
+      // Smooth step for opacity
+      function smoothstep(t) { return t * t * (3 - 2 * t); }
+
+      function drawRoundedImage(img, x, y, w, h, r) {
+        if (!img?.complete || !img.naturalWidth) return;
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.arcTo(x + w, y,     x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x,     y + h, r);
+        ctx.arcTo(x,     y + h, x,     y,     r);
+        ctx.arcTo(x,     y,     x + w, y,     r);
         ctx.closePath();
         ctx.clip();
         try { ctx.drawImage(img, x, y, w, h); } catch(e) {}
@@ -81,43 +94,33 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
         const elapsed  = ts - startTime;
         const progress = Math.min(elapsed / DURATION, 1);
 
-        // Match hero gradient exactly — #13294B top fading to near-same dark at bottom
-        // Hero uses rgba(255,255,255,0.10) on dark navy bg which reads as ~#1a2d3d
-        const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        grad.addColorStop(0,   '#13294B');
-        grad.addColorStop(0.5, '#162d4a');
-        grad.addColorStop(1,   '#192f48');
+        // Background gradient — cached, no allocation per frame
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Draw particles
         particles.forEach(p => {
           const raw = Math.max(0, (progress - p.delay) / (1 - p.delay));
-          if (raw <= 0) {
-            // Draw card at its original position before animation starts
+          const t   = Math.min(raw, 1);
+
+          if (t <= 0) {
+            // Card hasn't started moving yet — draw at exact original position
             ctx.save();
             ctx.globalAlpha = 1;
-            drawRoundedImage(ctx, p.img, p.sx - p.sw/2, p.sy - p.sh/2, p.sw, p.sh, 16);
+            drawRoundedImage(p.img, p.sx - p.sw/2, p.sy - p.sh/2, p.sw, p.sh, 16);
             ctx.restore();
             return;
           }
 
-          const t     = Math.min(raw, 1);
-          const eased = easeInOut(t);
+          const eased = easeIn(t);
 
-          // Position travels from real card location → centre
-          const x = p.sx + (p.ex - p.sx) * eased;
-          const y = p.sy + (p.ey - p.sy) * eased;
+          const x       = p.sx + (p.ex - p.sx) * eased;
+          const y       = p.sy + (p.ey - p.sy) * eased;
+          const scale   = Math.max(0, 1 - eased * 0.92);
+          const opacity = t < 0.65 ? 1 : 1 - smoothstep((t - 0.65) / 0.35);
+          const rot     = p.endRotation * eased;
 
-          // Scale — shrinks as it converges (card gets "pulled away")
-          const scale = 1 - eased * 0.9;
-
-          // Opacity — holds full until 70%, then fades out
-          const opacity = t < 0.7 ? 1 : 1 - ((t - 0.7) / 0.3);
-
-          // Rotation — spins faster as it accelerates inward
-          const rotation = p.startRotation + (p.endRotation) * eased;
-
-          if (scale <= 0.02 || opacity <= 0) return;
+          if (scale < 0.02 || opacity < 0.01) return;
 
           const w = p.sw * scale;
           const h = p.sh * scale;
@@ -125,15 +128,22 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
           ctx.save();
           ctx.globalAlpha = opacity;
           ctx.translate(x, y);
-          ctx.rotate((rotation * Math.PI) / 180);
-          drawRoundedImage(ctx, p.img, -w/2, -h/2, w, h, 16 * scale);
+          ctx.rotate(rot * Math.PI / 180);
+          drawRoundedImage(p.img, -w/2, -h/2, w, h, Math.max(2, 16 * scale));
           ctx.restore();
         });
+
+        // Vignette overlay — matches Act 1 dark centre
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Canvas itself fades in over first 200ms to avoid pop
+        const fadeIn = Math.min(elapsed / 200, 1);
+        canvas.style.opacity = fadeIn;
 
         if (progress < 1) {
           rafRef.current = requestAnimationFrame(animate);
         } else {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
           if (onComplete) onComplete();
         }
       }
@@ -141,9 +151,7 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
       rafRef.current = requestAnimationFrame(animate);
     }
 
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [active, capturedCards]);
 
   if (!active) return null;
@@ -156,6 +164,8 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
         inset: 0,
         zIndex: 200,
         pointerEvents: 'none',
+        opacity: 0,
+        willChange: 'opacity',
       }}
     />
   );
