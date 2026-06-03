@@ -192,3 +192,10 @@ body {
 #cta-btn {
   cursor: none !important;
 }
+
+/* Hide default cursor everywhere on the map scene */
+.mapboxgl-canvas,
+.mapboxgl-canvas-container,
+.mapboxgl-map {
+  cursor: none !important;
+}
