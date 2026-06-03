@@ -41,6 +41,7 @@ export const COUNTRY_CONFIG = {
       'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&q=80',
       'https://images.unsplash.com/photo-1534445867742-43195f401b6c?w=800&q=80',
     ],
+    imageLabels: ['Dolomites, Italy', 'Venice, Italy', 'Amalfi Coast, Italy'],
     flag: '🇮🇹',
     region: 'Dolomites, Italy',
     season: 'March - June',

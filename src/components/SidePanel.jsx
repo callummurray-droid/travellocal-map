@@ -130,7 +130,7 @@ export default function SidePanel({ country, config, onClose }) {
           borderRadius: 6, padding: '4px 10px',
           fontFamily: 'Mulish, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.92)',
         }}>
-          {config.region || country}
+          {config.imageLabels?.[imgIdx] || config.region || country}
         </div>
         {images.length > 1 && (
           <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
