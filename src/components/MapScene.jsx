@@ -1138,52 +1138,59 @@ export default function MapScene({ visible }) {
       )}
 
       {/* Bottom search bar */}
-      <div className="absolute bottom-8 left-8 z-20" style={{ minWidth: 260 }}>
-        <div className="search-pill rounded-full px-5 py-3 flex items-center gap-3 relative">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            type="text"
-            value={searchVal}
-            onChange={e => handleSearch(e.target.value)}
-            placeholder="Search for a destination"
-            className="bg-transparent border-none outline-none text-white text-sm font-body w-48"
-            style={{ caretColor: '#2ab5a0' }}
-          />
-          {suggestions.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl overflow-hidden z-30"
-              style={{ background: 'rgba(13,24,41,0.97)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
-              {suggestions.map(s => (
-                <button key={s}
-                  onClick={() => flyToCountry(s)}
-                  className="w-full text-left px-5 py-3 font-body text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-3"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(42,181,160,0.7)" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  {s}
-                </button>
-              ))}
+      <div className="absolute bottom-8 left-8 z-20" style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+        {/* Search + Surprise me row */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="search-pill rounded-full px-5 py-3 flex items-center gap-3 relative" style={{ minWidth: 260 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                type="text"
+                value={searchVal}
+                onChange={e => handleSearch(e.target.value)}
+                placeholder="Search for a destination"
+                className="bg-transparent border-none outline-none text-white text-sm font-body w-48"
+                style={{ caretColor: '#2ab5a0' }}
+              />
+              {suggestions.length > 0 && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl overflow-hidden z-30"
+                  style={{ background: 'rgba(13,24,41,0.97)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
+                  {suggestions.map(s => (
+                    <button key={s}
+                      onClick={() => flyToCountry(s)}
+                      className="w-full text-left px-5 py-3 font-body text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-3"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(42,181,160,0.7)" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-3 pl-2">
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ab5a0' }}/>
-          <span className="font-body text-white/40 text-xs">Local expert destinations</span>
+
+            {/* Surprise me — inline right of search */}
+            <button onClick={doSurprise}
+              className="flex items-center gap-2 px-5 py-3 rounded-full font-body text-sm font-semibold transition-all duration-200 hover:scale-105"
+              style={{ background: 'rgba(42,181,160,0.15)', border: '1px solid rgba(42,181,160,0.35)', color: '#2ab5a0', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              Surprise me
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 mt-3 pl-2">
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ab5a0' }}/>
+            <span className="font-body text-white/40 text-xs">Local expert destinations</span>
+          </div>
         </div>
       </div>
 
-      {/* Surprise me + zoom controls */}
-      <div className="absolute bottom-8 right-8 z-20 flex flex-col items-end gap-3">
-        <button onClick={doSurprise}
-          className="flex items-center gap-2 px-5 py-3 rounded-full font-body text-sm font-semibold transition-all duration-200 hover:scale-105"
-          style={{ background: 'rgba(42,181,160,0.15)', border: '1px solid rgba(42,181,160,0.35)', color: '#2ab5a0', backdropFilter: 'blur(12px)' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          Surprise me
-        </button>
-
+      {/* Zoom controls — right side only */}
+      <div className="absolute bottom-8 right-8 z-20">
         <div className="map-controls rounded-2xl overflow-hidden flex flex-col">
           {[
             { icon: '+', action: () => mapRef.current?.zoomIn() },
