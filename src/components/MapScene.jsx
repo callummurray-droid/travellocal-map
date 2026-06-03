@@ -836,10 +836,10 @@ export default function MapScene({ visible }) {
         const [lat, lng] = config.coordinates.replace(/[°NSEW]/g, '').split(',').map(Number);
         center = [lng || 0, lat || 0];
       }
-      // Add POI pins after fly settles — wait for idle not just a timeout
+      // Add POI pins after fly animation completes
       if (center) {
         mapRef.current.flyTo({ center, zoom: fly.zoom || 5, duration: 1400, essential: true });
-        mapRef.current.once('idle', () => addPOIs(name));
+        setTimeout(() => addPOIs(name), 1600);
       } else {
         setTimeout(() => addPOIs(name), 800);
       }
