@@ -119,22 +119,31 @@ export default function MapScene({ visible }) {
         },
       });
 
-      // Expert pins
+      // Expert pins — wrapper approach so Mapbox positioning never conflicts
       EXPERT_PINS.forEach((pin, i) => {
+        // Outer wrapper — Mapbox moves this, we never touch its transform
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          width: 12px; height: 12px;
+          position: relative;
+          cursor: pointer;
+        `;
+
+        // Inner dot — we animate this, never the wrapper
         const el = document.createElement('div');
-        el.className = 'expert-pin';
         el.style.cssText = `
           width: 12px; height: 12px;
           border-radius: 50%;
           background: #2ab5a0;
           border: 2px solid rgba(255,255,255,0.8);
-          cursor: pointer;
-          position: relative;
+          position: absolute;
+          inset: 0;
           opacity: 0;
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+          transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+                      opacity 0.4s ease;
         `;
-        el.style.boxShadow = '0 0 0 0 rgba(42,181,160,0.4)';
 
+        // Pulse ring — child of inner dot
         const ring = document.createElement('div');
         ring.style.cssText = `
           position: absolute;
@@ -143,30 +152,35 @@ export default function MapScene({ visible }) {
           border: 1.5px solid rgba(42,181,160,0.5);
           animation: pin-pulse ${2 + (i % 3) * 0.5}s ease-out infinite;
           animation-delay: ${i * 0.15}s;
+          pointer-events: none;
         `;
-        el.appendChild(ring);
 
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.5)';
+        el.appendChild(ring);
+        wrapper.appendChild(el);
+
+        // Hover on wrapper — scale only the inner dot
+        wrapper.addEventListener('mouseenter', () => {
+          el.style.transform = 'scale(1.6)';
         });
-        el.addEventListener('mouseleave', () => {
+        wrapper.addEventListener('mouseleave', () => {
           el.style.transform = 'scale(1)';
         });
 
-        const marker = new mapboxgl.Marker({ element: el })
+        const marker = new mapboxgl.Marker({ element: wrapper, anchor: 'center' })
           .setLngLat(pin.coords)
           .addTo(map);
-        markersRef.current.push({ marker, el });
+
+        markersRef.current.push({ marker, el, wrapper });
       });
 
-      // Animate pins in staggered
+      // Stagger pins in — fade only, no scale/transform
       setTimeout(() => {
         markersRef.current.forEach(({ el }, i) => {
           setTimeout(() => {
-            gsap.to(el, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' });
-          }, i * 60);
+            el.style.opacity = '1';
+          }, i * 60 + 300);
         });
-      }, 300);
+      }, 100);
 
       // Hover interaction
       map.on('mousemove', 'country-fills', (e) => {
