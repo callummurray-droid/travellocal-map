@@ -540,6 +540,8 @@ export default function MapScene({ visible }) {
       essential: true,
     });
   };
+
+  const selectCountry = (name, featureId) => {
     const config = ALL_CONFIG[name];
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
