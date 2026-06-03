@@ -1291,6 +1291,7 @@ export default function MapScene({ visible }) {
       <SidePanel
         country={selectedCountry?.name}
         config={selectedCountry?.config}
+        activePOI={mode3D ? activePOI : null}
         onClose={closePanel}
       />
 
