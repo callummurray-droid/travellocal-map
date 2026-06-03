@@ -172,6 +172,36 @@ const COUNTRY_FLY = {
   default:  { center: null, zoom: 5 },
 };
 
+// Flag colours keyed by Mapbox name_en — used for hover border and fill
+const FLAG_COLOURS_MAP = {
+  'Italy':'#CE2B37','Japan':'#BC002D','Morocco':'#006233','Spain':'#AA151B',
+  'France':'#0055A4','Greece':'#0D5EAF','Portugal':'#006600','Peru':'#D91023',
+  'Costa Rica':'#002B7F','Egypt':'#CE1126','India':'#FF9933','Thailand':'#A51931',
+  'Tunisia':'#E70013','Albania':'#E41E20','Argentina':'#74ACDF','Australia':'#00008B',
+  'Austria':'#ED2939','Belize':'#003F87','Bhutan':'#FF8000','Bolivia':'#D52B1E',
+  'Botswana':'#75AADB','Brazil':'#009C3B','Bulgaria':'#00966E','Cambodia':'#032EA1',
+  'Canada':'#FF0000','Chile':'#D52B1E','China':'#DE2910','Colombia':'#FCD116',
+  'Croatia':'#FF0000','Cuba':'#002A8F','Czechia':'#D7141A','Czech Republic':'#D7141A',
+  'Ecuador':'#FFD100','Estonia':'#0072CE','Finland':'#003580','Georgia':'#FF0000',
+  'Germany':'#FFCE00','Ghana':'#006B3F','Greenland':'#009A44','Guatemala':'#4997D0',
+  'Iceland':'#003897','Indonesia':'#CE1126','Jordan':'#007A3D','Kenya':'#006600',
+  'Kyrgyzstan':'#E8112D','Laos':'#CE1126','Latvia':'#9E3039','Lithuania':'#FDB913',
+  'Madagascar':'#FC3D32','Malaysia':'#CC0001','Malta':'#CF142B','Mexico':'#006847',
+  'Mongolia':'#C4272F','Montenegro':'#D4AF37','Namibia':'#003580','Nepal':'#003893',
+  'New Zealand':'#00247D','Nicaragua':'#3A75C4','Norway':'#EF2B2D','Oman':'#DB161B',
+  'Pakistan':'#01411C','Panama':'#DA121A','Philippines':'#0038A8','Poland':'#DC143C',
+  'Romania':'#002B7F','Rwanda':'#20603D','Slovenia':'#003DA5','South Africa':'#007A4D',
+  'Sri Lanka':'#8D153A','Switzerland':'#FF0000','Tanzania':'#1EB53A','Turkey':'#E30A17',
+  'Uganda':'#000000','United Arab Emirates':'#00732F','Uzbekistan':'#1EB53A',
+  'Vietnam':'#DA251D','Zimbabwe':'#006400','United Kingdom':'#C8102E','Sweden':'#006AA7',
+  'Scotland':'#C8102E','Wales':'#C8102E','England':'#C8102E','Northern Ireland':'#C8102E',
+};
+const FLAG_COLOURS_EXPR = [
+  'match', ['get', 'name_en'],
+  ...Object.entries(FLAG_COLOURS_MAP).flatMap(([k,v]) => [k, v]),
+  'rgba(255,255,255,0.5)',
+];
+
 // Country audio tracks — add MP3s to /public/audio/
 const COUNTRY_AUDIO = {
   Italy:    '/audio/italy.mp3',
@@ -296,6 +326,20 @@ export default function MapScene({ visible }) {
             ['boolean', ['feature-state', 'selected'], false], 2.5,
             0,
           ],
+          'line-blur': 0,
+        },
+      });
+
+      // Hover border — flag colour per country
+      map.addLayer({
+        id: 'country-borders-hover',
+        type: 'line',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        paint: {
+          'line-color': FLAG_COLOURS_EXPR,
+          'line-width': ['case', ['boolean', ['feature-state', 'hovered'], false], 2, 0],
+          'line-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 0.8, 0],
           'line-blur': 0,
         },
       });
@@ -639,13 +683,13 @@ export default function MapScene({ visible }) {
           'fill-color': [
             'case',
             ['boolean', ['feature-state', 'selected'], false], col,
-            ['boolean', ['feature-state', 'hovered'], false], '#ffffff',
+            ['boolean', ['feature-state', 'hovered'], false], FLAG_COLOURS_EXPR,
             'rgba(0,0,0,0)',
           ],
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'selected'], false], 0.12,
-            ['boolean', ['feature-state', 'hovered'], false], 0.06,
+            ['boolean', ['feature-state', 'hovered'], false], 0.10,
             0,
           ],
         },
