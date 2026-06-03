@@ -154,14 +154,6 @@ export default function SidePanel({ country, config, onClose }) {
       }}
         className="hide-scrollbar"
       >
-        <style>{`
-          .hide-scrollbar::-webkit-scrollbar { display: none; }
-          .pills-scroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
-          .pills-scroll::-webkit-scrollbar { display: none; }
-          .trips-scroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
-          .trips-scroll::-webkit-scrollbar { display: none; }
-        `}</style>
-
         {/* Coordinates */}
         <p style={{ fontSize: 11, letterSpacing: '0.14em', color: '#8a9aaa', marginBottom: 8, textTransform: 'uppercase', margin: '0 0 8px' }}>
           {config.capital} — {config.coordinates}

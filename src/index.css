@@ -110,7 +110,7 @@ body {
 
 /* CTA button */
 .cta-btn {
-  background: white;
+  background: white !important;
   color: var(--colour-navy);
   border: none;
   border-radius: 100px;
@@ -199,3 +199,10 @@ body {
 .mapboxgl-map {
   cursor: none !important;
 }
+
+/* SidePanel scrollbar hiding */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.pills-scroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.pills-scroll::-webkit-scrollbar { display: none; }
+.trips-scroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.trips-scroll::-webkit-scrollbar { display: none; }
