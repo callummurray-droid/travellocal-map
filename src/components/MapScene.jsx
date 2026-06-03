@@ -250,14 +250,14 @@ export default function MapScene({ visible }) {
         paint: {
           'fill-color': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], '#ffffff',
+            ['boolean', ['feature-state', 'selected'], false], '#2ab5a0',
             ['boolean', ['feature-state', 'hovered'], false],  '#ffffff',
             'rgba(0,0,0,0)',
           ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], 0.92,
-            ['boolean', ['feature-state', 'hovered'], false],  0.15,
+            ['boolean', ['feature-state', 'selected'], false], 0.12,
+            ['boolean', ['feature-state', 'hovered'], false],  0.06,
             0,
           ],
         },
@@ -276,10 +276,10 @@ export default function MapScene({ visible }) {
           ],
           'line-width': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], 3,
+            ['boolean', ['feature-state', 'selected'], false], 2.5,
             0,
           ],
-          'line-blur': 1,
+          'line-blur': 0,
         },
       });
 
@@ -616,7 +616,7 @@ export default function MapScene({ visible }) {
             'rgba(0,0,0,0)',
           ],
           'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 3, 0],
-          'line-blur': 1,
+          'line-blur': 0,
         },
       });
 
@@ -707,7 +707,14 @@ export default function MapScene({ visible }) {
         { source: 'countries', sourceLayer: 'country_boundaries', id: featureId },
         { selected: true, hovered: false }
       );
-      const col = config?.colour || '#e86030';
+      const col = config?.colour || '#2ab5a0';
+      // Use country's own colour for the subtle tint + border
+      mapRef.current.setPaintProperty('country-fills', 'fill-color', [
+        'case',
+        ['boolean', ['feature-state', 'selected'], false], col,
+        ['boolean', ['feature-state', 'hovered'], false], '#ffffff',
+        'rgba(0,0,0,0)',
+      ]);
       mapRef.current.setPaintProperty('country-borders-selected', 'line-color', [
         'case',
         ['boolean', ['feature-state', 'selected'], false], col,
