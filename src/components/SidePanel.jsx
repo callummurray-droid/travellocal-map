@@ -84,11 +84,6 @@ export default function SidePanel({ country, config, activePOI, onClose, onTripS
 
   if (!country || !config) return null;
 
-  const images  = config.images || [];
-  const trips   = TRIPS[country] || TRIPS.Italy;
-  const experts = LOCAL_EXPERTS[country] || LOCAL_EXPERTS.Italy;
-  const quote   = country === 'Italy' ? ITALY_QUOTE : DEFAULT_EXPERT_QUOTE(country);
-
   return (
     <div
       ref={panelRef}
