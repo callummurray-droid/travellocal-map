@@ -81,8 +81,11 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
         const elapsed  = ts - startTime;
         const progress = Math.min(elapsed / DURATION, 1);
 
-        // Draw navy background — hides the hero underneath
-        ctx.fillStyle = '#13294B';
+        // Draw gradient matching hero exactly — no jarring colour change
+        const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#13294B');
+        grad.addColorStop(1, 'rgba(255,255,255,0.10)');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         particles.forEach(p => {
