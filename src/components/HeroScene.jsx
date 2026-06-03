@@ -151,7 +151,7 @@ export default function HeroScene({ onExplore }) {
       // Nav manages its own visibility
 
       gsap.set('#marquee-wrap', { opacity: 0 });
-      tl.to('#marquee-wrap', { opacity: 0.5, duration: 1.4, ease: 'power2.out' }, 0.2);
+      tl.to('#marquee-wrap', { opacity: 0.65, duration: 1.4, ease: 'power2.out' }, 0.2);
 
       gsap.set('.headline-word-inner', { y: '110%' });
       tl.to('.headline-word-inner', { y: '0%', duration: 0.9, stagger: 0.055, ease: 'power4.out' }, 0.35);
@@ -288,7 +288,7 @@ export default function HeroScene({ onExplore }) {
                 e.currentTarget.style.zIndex = '10';
                 const siblings = e.currentTarget.parentElement.children;
                 Array.from(siblings).forEach((el, j) => {
-                  if (el !== e.currentTarget) el.style.filter = 'brightness(0.72)';
+                  if (el !== e.currentTarget) el.style.filter = 'brightness(0.82)';
                 });
                 const wrap = document.getElementById('marquee-wrap');
                 if (wrap) wrap.style.opacity = '1';
@@ -308,7 +308,7 @@ export default function HeroScene({ onExplore }) {
                 const siblings = e.currentTarget.parentElement.children;
                 Array.from(siblings).forEach(el => { el.style.filter = ''; });
                 const wrap = document.getElementById('marquee-wrap');
-                if (wrap) wrap.style.opacity = '0.5';
+                if (wrap) wrap.style.opacity = '0.65';
                 const cur = document.getElementById('custom-cursor');
                 if (cur) {
                   cur.style.width = '12px';
