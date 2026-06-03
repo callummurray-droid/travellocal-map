@@ -577,11 +577,30 @@ export default function MapScene({ visible }) {
         maxzoom: 14,
       });
 
-      // Re-add countries source + layers
+      // Re-add 3D buildings layer
+      map.addLayer({
+        id: 'buildings-3d',
+        source: 'composite',
+        'source-layer': 'building',
+        filter: ['==', 'extrude', 'true'],
+        type: 'fill-extrusion',
+        minzoom: 12,
+        paint: {
+          'fill-extrusion-color': '#1a2e4a',
+          'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'height']],
+          'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'min_height']],
+          'fill-extrusion-opacity': 0.7,
+        },
+      });
+
+      // Re-add countries source + layers with correct subtle paint
       map.addSource('countries', {
         type: 'vector',
         url: 'mapbox://mapbox.country-boundaries-v1',
       });
+
+      const col = countryToRestore?.config?.colour || '#2ab5a0';
+
       map.addLayer({
         id: 'country-fills',
         type: 'fill',
@@ -591,36 +610,32 @@ export default function MapScene({ visible }) {
         paint: {
           'fill-color': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], '#ffffff',
+            ['boolean', ['feature-state', 'selected'], false], col,
             ['boolean', ['feature-state', 'hovered'], false], '#ffffff',
             'rgba(0,0,0,0)',
           ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], 0.92,
-            ['boolean', ['feature-state', 'hovered'], false], 0.15,
+            ['boolean', ['feature-state', 'selected'], false], 0.12,
+            ['boolean', ['feature-state', 'hovered'], false], 0.06,
             0,
           ],
         },
       });
+
       map.addLayer({
         id: 'country-borders-selected',
         type: 'line',
         source: 'countries',
         'source-layer': 'country_boundaries',
         paint: {
-          'line-color': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false],
-            countryToRestore?.config?.colour || '#e86030',
-            'rgba(0,0,0,0)',
-          ],
-          'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 3, 0],
+          'line-color': ['case', ['boolean', ['feature-state', 'selected'], false], col, 'rgba(0,0,0,0)'],
+          'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 0],
           'line-blur': 0,
         },
       });
 
-      // Re-add expert pins source + layers
+      // Re-add expert pins WebGL layers
       map.addSource('expert-pins', {
         type: 'geojson',
         data: {
@@ -637,7 +652,7 @@ export default function MapScene({ visible }) {
         type: 'circle',
         source: 'expert-pins',
         paint: {
-          'circle-radius': 10,
+          'circle-radius': 5,
           'circle-color': 'transparent',
           'circle-stroke-width': 1.5,
           'circle-stroke-color': 'rgba(42,181,160,0.45)',
@@ -658,7 +673,70 @@ export default function MapScene({ visible }) {
         },
       });
 
-      // Fly back to country
+      // Re-attach map event listeners
+      map.on('mousemove', 'country-fills', (e) => {
+        if (panelOpen) return;
+        const raw = e.features[0]?.properties?.name_en;
+        const name = resolveCountryName(raw);
+        if (!name) return;
+        if (hoveredIdRef.current !== null) {
+          map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredIdRef.current }, { hovered: false });
+        }
+        hoveredIdRef.current = e.features[0].id;
+        map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredIdRef.current }, { hovered: true });
+        map.getCanvas().style.cursor = 'pointer';
+        const point = map.project(e.lngLat);
+        setHoveredCountry({ name, x: point.x, y: point.y });
+        const cur = cursorRef.current;
+        const arr = document.getElementById('map-cursor-arrow');
+        if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
+        if (arr) arr.style.opacity = '1';
+      });
+      map.on('mouseleave', 'country-fills', () => {
+        if (hoveredIdRef.current !== null) {
+          map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredIdRef.current }, { hovered: false });
+        }
+        hoveredIdRef.current = null;
+        map.getCanvas().style.cursor = '';
+        const cur = cursorRef.current;
+        const arr = document.getElementById('map-cursor-arrow');
+        if (cur) { cur.style.width = '12px'; cur.style.height = '12px'; }
+        if (arr) arr.style.opacity = '0';
+        hideTimerRef.current = setTimeout(() => {
+          if (!popupHovered.current) setHoveredCountry(null);
+        }, 120);
+      });
+      map.on('click', 'country-fills', (e) => {
+        const raw = e.features[0]?.properties?.name_en;
+        const name = resolveCountryName(raw);
+        if (!name) return;
+        selectCountry(name, e.features[0].id);
+      });
+      map.on('mouseenter', 'expert-pins-dot', () => {
+        map.getCanvas().style.cursor = 'pointer';
+        map.setPaintProperty('expert-pins-dot', 'circle-radius', ['interpolate', ['linear'], ['zoom'], 2, 5, 5, 8, 10, 11]);
+      });
+      map.on('mouseleave', 'expert-pins-dot', () => {
+        map.getCanvas().style.cursor = '';
+        map.setPaintProperty('expert-pins-dot', 'circle-radius', ['interpolate', ['linear'], ['zoom'], 2, 3, 5, 5, 10, 7]);
+      });
+
+      // Restart pulse RAF
+      if (pulseRafRef.current) cancelAnimationFrame(pulseRafRef.current);
+      let pulseStart = null;
+      const PULSE_DURATION = 2000;
+      function pulse(ts) {
+        if (!pulseStart) pulseStart = ts;
+        const t = ((ts - pulseStart) % PULSE_DURATION) / PULSE_DURATION;
+        try {
+          map.setPaintProperty('expert-pins-ring', 'circle-radius', 5 + t * 13);
+          map.setPaintProperty('expert-pins-ring', 'circle-stroke-opacity', 0.7 * (1 - t));
+        } catch(e) {}
+        pulseRafRef.current = requestAnimationFrame(pulse);
+      }
+      pulseRafRef.current = requestAnimationFrame(pulse);
+
+      // Fly back to country view
       map.flyTo({
         center: fly.center || [12, 48],
         zoom: fly.zoom || 5,
@@ -668,14 +746,13 @@ export default function MapScene({ visible }) {
         essential: true,
       });
 
-      // Restore POI pins and reopen panel
+      // Restore selected country state + POI pins + panel
       if (countryToRestore) {
         setTimeout(() => {
           addPOIs(countryToRestore.name);
-          // Ensure panel stays open
           setSelectedCountry(countryToRestore);
           setPanelOpen(true);
-        }, 600);
+        }, 500);
       }
     });
   };
