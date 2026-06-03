@@ -168,68 +168,83 @@ export default function MapScene({ visible }) {
         },
       });
 
-      // Expert pins — wrapper approach so Mapbox positioning never conflicts
-      EXPERT_PINS.forEach((pin, i) => {
-        // Outer wrapper — Mapbox moves this, we never touch its transform
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = `
-          width: 12px; height: 12px;
-          position: relative;
-          cursor: pointer;
-        `;
-
-        // Inner dot — we animate this, never the wrapper
-        const el = document.createElement('div');
-        el.style.cssText = `
-          width: 12px; height: 12px;
-          border-radius: 50%;
-          background: #2ab5a0;
-          border: 2px solid rgba(255,255,255,0.8);
-          position: absolute;
-          inset: 0;
-          opacity: 0;
-          transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-                      opacity 0.4s ease;
-        `;
-
-        // Pulse ring — child of inner dot
-        const ring = document.createElement('div');
-        ring.style.cssText = `
-          position: absolute;
-          inset: -6px;
-          border-radius: 50%;
-          border: 1.5px solid rgba(42,181,160,0.5);
-          animation: pin-pulse ${2 + (i % 3) * 0.5}s ease-out infinite;
-          animation-delay: ${i * 0.15}s;
-          pointer-events: none;
-        `;
-
-        el.appendChild(ring);
-        wrapper.appendChild(el);
-
-        // Hover on wrapper — scale only the inner dot
-        wrapper.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.6)';
-        });
-        wrapper.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-        });
-
-        const marker = new mapboxgl.Marker({ element: wrapper, anchor: 'center' })
-          .setLngLat(pin.coords)
-          .addTo(map);
-
-        markersRef.current.push({ marker, el, wrapper });
+      // Expert pins — GeoJSON circle layer rendered by WebGL
+      // Never disappears on zoom, always pixel-perfect on coordinates
+      map.addSource('expert-pins', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: EXPERT_PINS.map(pin => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: pin.coords },
+            properties: { name: pin.name },
+          })),
+        },
       });
 
-      // Stagger pins in — fade only, no scale/transform
+      // Outer pulse ring layer
+      map.addLayer({
+        id: 'expert-pins-ring',
+        type: 'circle',
+        source: 'expert-pins',
+        paint: {
+          'circle-radius': 10,
+          'circle-color': 'transparent',
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': 'rgba(42,181,160,0.45)',
+          'circle-opacity': 0,
+          'circle-stroke-opacity': 0,
+        },
+      });
+
+      // Inner dot layer
+      map.addLayer({
+        id: 'expert-pins-dot',
+        type: 'circle',
+        source: 'expert-pins',
+        paint: {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            2, 3,
+            5, 5,
+            10, 7,
+          ],
+          'circle-color': '#2ab5a0',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'rgba(255,255,255,0.85)',
+          'circle-opacity': 0,
+          'circle-stroke-opacity': 0,
+        },
+      });
+
+      // Hover state — enlarge dot
+      map.on('mouseenter', 'expert-pins-dot', () => {
+        map.getCanvas().style.cursor = 'pointer';
+        map.setPaintProperty('expert-pins-dot', 'circle-radius', [
+          'interpolate', ['linear'], ['zoom'],
+          2, 5,
+          5, 8,
+          10, 11,
+        ]);
+      });
+
+      map.on('mouseleave', 'expert-pins-dot', () => {
+        map.getCanvas().style.cursor = '';
+        map.setPaintProperty('expert-pins-dot', 'circle-radius', [
+          'interpolate', ['linear'], ['zoom'],
+          2, 3,
+          5, 5,
+          10, 7,
+        ]);
+      });
+
+      // Fade pins in after map loads
       setTimeout(() => {
-        markersRef.current.forEach(({ el }, i) => {
-          setTimeout(() => {
-            el.style.opacity = '1';
-          }, i * 60 + 300);
-        });
-      }, 100);
+        map.setPaintProperty('expert-pins-dot',  'circle-opacity', 1);
+        map.setPaintProperty('expert-pins-dot',  'circle-stroke-opacity', 1);
+        map.setPaintProperty('expert-pins-ring', 'circle-opacity', 0);
+        map.setPaintProperty('expert-pins-ring', 'circle-stroke-opacity', 0.45);
+      }, 600);
 
       // Hover interaction
       map.on('mousemove', 'country-fills', (e) => {
