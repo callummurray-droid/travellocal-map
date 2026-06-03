@@ -148,7 +148,7 @@ export default function HeroScene({ onExplore }) {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: 0.15 });
 
-      tl.to('#tl-nav', { opacity: 1, duration: 0.7, ease: 'power3.out' }, 0);
+      // Nav manages its own visibility
 
       gsap.set('#marquee-wrap', { opacity: 0 });
       tl.to('#marquee-wrap', { opacity: 0.5, duration: 1.4, ease: 'power2.out' }, 0.2);
@@ -175,7 +175,7 @@ export default function HeroScene({ onExplore }) {
       .to('#cta-btn',      { opacity: 0, scale: 0.9, duration: 0.3 }, 0.22)
       .to('#marquee-wrap', { opacity: 0, duration: 0.4 }, 0.1)
       .to('#spotlight-canvas', { opacity: 0, duration: 0.3 }, 0.1)
-      .to('#tl-nav',       { opacity: 0, duration: 0.3 }, 0.15)
+      
       .to('#custom-cursor', { opacity: 0, duration: 0.2 }, 0.1);
   };
 

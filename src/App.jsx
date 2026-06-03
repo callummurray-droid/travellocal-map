@@ -5,7 +5,7 @@ import MapScene from './components/MapScene';
 import IrisTransition from './components/IrisTransition';
 
 export default function App() {
-  const [phase, setPhase] = useState('hero');
+  const [phase, setPhase]       = useState('hero');
   const [irisActive, setIrisActive] = useState(false);
   const ctaBounds = useRef(null);
 
@@ -27,20 +27,20 @@ export default function App() {
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#0d1829' }}>
 
-      {/* Nav always on top — z-50 sits above hero z-20 */}
+      {/* Nav — always rendered, hamburger always visible */}
       <Nav />
 
-      {/* Hero — z-20, below nav */}
+      {/* Hero */}
       {(phase === 'hero' || phase === 'transitioning') && (
         <div className="absolute inset-0" style={{ zIndex: 20 }}>
           <HeroScene onExplore={handleExplore} />
         </div>
       )}
 
-      {/* Map — mounts during transition so it loads in background */}
+      {/* Map */}
       <MapScene visible={phase === 'map' || phase === 'transitioning'} />
 
-      {/* Iris — z-200 sits above everything */}
+      {/* Iris */}
       <IrisTransition
         active={irisActive}
         ctaPosition={ctaBounds.current}
