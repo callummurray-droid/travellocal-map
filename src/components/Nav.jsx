@@ -99,26 +99,9 @@ export default function Nav() {
           boxSizing: 'border-box',
         }}
       >
-        {/* Logo — placeholder bracket mark until icon asset arrives */}
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* TODO: swap this SVG for the real TravelLocal icon PNG once provided */}
-          <div style={{ position: 'relative', width: 44, height: 44 }}>
-            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-              <path d="M3 13 L3 3 L13 3"   stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M31 41 L41 41 L41 31" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Georgia, serif', color: 'white',
-              fontSize: 9, fontWeight: 600, lineHeight: 1.3,
-              textAlign: 'center',
-            }}>
-              <span>Travel</span>
-              <span>Local</span>
-            </div>
-          </div>
+        {/* Logo — TravelLocal SVG icon */}
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+          <img src="/logo.svg" alt="TravelLocal" style={{ height: 48, width: 'auto', display: 'block' }} />
         </div>
 
         {/* Links — centred absolutely */}
