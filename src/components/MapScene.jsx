@@ -204,7 +204,9 @@ export default function MapScene({ visible }) {
   const selectedFeatureIdRef = useRef(null);
   const fireworksRef  = useRef(null);
   const orbitRafRef   = useRef(null);
-  const itinMarkersRef = useRef([]);
+  const itinMarkersRef  = useRef([]);
+  const itinCanvasRef   = useRef(null);
+  const itinRafRef      = useRef(null);
   const [activeTrip, setActiveTrip] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
@@ -559,10 +561,12 @@ export default function MapScene({ visible }) {
     const map = mapRef.current;
     itinMarkersRef.current.forEach(m => m.remove());
     itinMarkersRef.current = [];
+    if (itinRafRef.current) { cancelAnimationFrame(itinRafRef.current); itinRafRef.current = null; }
+    const canvas = itinCanvasRef.current;
+    if (canvas) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); }
     if (map) {
-      if (map.getLayer('itin-route')) map.removeLayer('itin-route');
-      if (map.getLayer('itin-route-glow')) map.removeLayer('itin-route-glow');
-      if (map.getSource('itin-route')) map.removeSource('itin-route');
+      ['itin-route','itin-route-glow'].forEach(id => { try { if (map.getLayer(id)) map.removeLayer(id); } catch(e){} });
+      try { if (map.getSource('itin-route')) map.removeSource('itin-route'); } catch(e){}
     }
     setActiveTrip(null);
   };
@@ -589,63 +593,69 @@ export default function MapScene({ visible }) {
       duration: 1800,
     });
 
-    // Draw route line after fly
+    // Draw animated canvas route after fly settles
     setTimeout(() => {
       if (!map) return;
+      const canvas = itinCanvasRef.current;
+      if (!canvas) return;
 
-      // Remove old if exists
-      if (map.getLayer('itin-route')) map.removeLayer('itin-route');
-      if (map.getSource('itin-route')) map.removeSource('itin-route');
+      const mapCanvas = map.getCanvas();
+      canvas.width  = mapCanvas.width;
+      canvas.height = mapCanvas.height;
+      const ctx = canvas.getContext('2d');
+      let dashOffset = 0;
 
-      map.addSource('itin-route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates: coords },
-        },
-      });
+      const redraw = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const pts = coords.map(c => { const p = map.project(c); return [p.x, p.y]; });
+        if (pts.length < 2) return;
 
-      // Glow/casing layer underneath
-      map.addLayer({
-        id: 'itin-route-glow',
-        type: 'line',
-        source: 'itin-route',
-        paint: {
-          'line-color': '#2ab5a0',
-          'line-width': 10,
-          'line-opacity': 0.2,
-          'line-blur': 4,
-        },
-      });
+        // Outer soft glow
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(42,181,160,0.15)'; ctx.lineWidth = 32;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
 
-      // Solid teal route line on top
-      map.addLayer({
-        id: 'itin-route',
-        type: 'line',
-        source: 'itin-route',
-        paint: {
-          'line-color': '#2ab5a0',
-          'line-width': 4,
-          'line-opacity': 0.95,
-        },
-      });
+        // Mid glow
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(42,181,160,0.35)'; ctx.lineWidth = 14;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+
+        // Bright solid core
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#2ab5a0'; ctx.lineWidth = 4; ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+
+        // Animated white dash travelling along
+        dashOffset = (dashOffset - 1.5) % 28;
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
+        ctx.setLineDash([12, 16]); ctx.lineDashOffset = dashOffset;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+
+        itinRafRef.current = requestAnimationFrame(redraw);
+      };
+
+      map.on('move', redraw);
+      map.on('zoom', redraw);
+      redraw();
 
       // Numbered stop markers
       stops.forEach((stop, i) => {
         const el = document.createElement('div');
-        el.style.cssText = `
-          display: flex; flex-direction: column; align-items: center;
-          cursor: none; pointer-events: none;
-        `;
+        el.style.cssText = 'display:flex;flex-direction:column;align-items:center;cursor:none;pointer-events:none;';
 
         const badge = document.createElement('div');
         badge.style.cssText = `
-          width: 26px; height: 26px; border-radius: 50%;
-          background: #152238; border: 2.5px solid #2ab5a0;
+          width: 28px; height: 28px; border-radius: 50%;
+          background: #2ab5a0; border: 2.5px solid white;
           display: flex; align-items: center; justify-content: center;
           font-family: Mulish, sans-serif; font-size: 11px; font-weight: 800;
           color: white; flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          box-shadow: 0 0 0 4px rgba(42,181,160,0.3), 0 2px 8px rgba(0,0,0,0.5);
         `;
         badge.textContent = i + 1;
 
@@ -656,16 +666,11 @@ export default function MapScene({ visible }) {
           background: rgba(13,24,41,0.92); color: white;
           font-family: Mulish, sans-serif; font-size: 9px; font-weight: 700;
           border-radius: 5px; white-space: nowrap;
-          border: 1px solid rgba(42,181,160,0.4);
-          max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+          border: 1px solid rgba(42,181,160,0.5);
         `;
 
-        el.appendChild(badge);
-        el.appendChild(lbl);
-
-        const marker = new mapboxgl.Marker({ element: el, anchor: 'top' })
-          .setLngLat(stop.coords)
-          .addTo(map);
+        el.appendChild(badge); el.appendChild(lbl);
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'top' }).setLngLat(stop.coords).addTo(map);
         itinMarkersRef.current.push(marker);
       });
     }, 1900);
@@ -1413,6 +1418,15 @@ export default function MapScene({ visible }) {
         activePOI={mode3D ? activePOI : null}
         onClose={closePanel}
         onTripSelect={showTripItinerary}
+      />
+
+      {/* Itinerary animated canvas overlay */}
+      <canvas
+        ref={itinCanvasRef}
+        style={{
+          position: 'absolute', inset: 0, zIndex: 25,
+          pointerEvents: 'none', width: '100%', height: '100%',
+        }}
       />
 
       {/* Itinerary legend — shown when a trip is mapped */}
