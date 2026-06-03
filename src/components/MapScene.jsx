@@ -198,10 +198,12 @@ export default function MapScene({ visible }) {
   const is3DRef       = useRef(false);
   const [mode3D, setMode3D]         = useState(false);
   const [activePOI, setActivePOI]   = useState(null);
+  const [isOrbiting, setIsOrbiting] = useState(false);
   const audioRef      = useRef(null);
   const audioFadeRef  = useRef(null);
   const selectedFeatureIdRef = useRef(null);
   const fireworksRef  = useRef(null);
+  const orbitRafRef   = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -551,6 +553,36 @@ export default function MapScene({ visible }) {
     });
   };
 
+  const stopOrbit = () => {
+    if (orbitRafRef.current) {
+      cancelAnimationFrame(orbitRafRef.current);
+      orbitRafRef.current = null;
+    }
+    setIsOrbiting(false);
+  };
+
+  const startOrbit = (map, center) => {
+    stopOrbit();
+    setIsOrbiting(true);
+    let startTime = null;
+    const ORBIT_SPEED = 0.018;
+    const BASE_PITCH  = 65;
+    const PITCH_SWAY  = 6;
+    const SWAY_PERIOD = 8000;
+
+    function orbit(ts) {
+      if (!is3DRef.current || !map) return;
+      if (!startTime) startTime = ts;
+      const elapsed = ts - startTime;
+      const currentBearing = map.getBearing();
+      map.setBearing(currentBearing + ORBIT_SPEED);
+      const pitchOffset = Math.sin((elapsed / SWAY_PERIOD) * Math.PI * 2) * PITCH_SWAY;
+      map.setPitch(BASE_PITCH + pitchOffset);
+      orbitRafRef.current = requestAnimationFrame(orbit);
+    }
+    orbitRafRef.current = requestAnimationFrame(orbit);
+  };
+
   const diveIntoPOI = (poi) => {
     const map = mapRef.current;
     if (!map) return;
@@ -589,6 +621,16 @@ export default function MapScene({ visible }) {
         essential: true,
         easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
       });
+
+      // Start orbit after fly-in completes
+      map.once('moveend', () => {
+        if (!is3DRef.current) return;
+        startOrbit(map, poi.coords);
+      });
+
+      // Stop orbit if user manually drags
+      map.on('dragstart', () => stopOrbit());
+      map.on('rotatestart', () => stopOrbit());
     });
   };
 
@@ -602,6 +644,7 @@ export default function MapScene({ visible }) {
     is3DRef.current = false;
     setMode3D(false);
     setActivePOI(null);
+    stopOrbit();
 
     const fly = countryToRestore
       ? (COUNTRY_FLY[countryToRestore.name] || COUNTRY_FLY.default)
@@ -1081,7 +1124,32 @@ export default function MapScene({ visible }) {
             {/* Divider */}
             <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
 
-            {/* Zoom in */}
+            {/* Orbit toggle */}
+            <button
+              onClick={() => {
+                if (isOrbiting) {
+                  stopOrbit();
+                } else {
+                  startOrbit(mapRef.current, activePOI?.coords);
+                }
+              }}
+              title={isOrbiting ? 'Stop orbit' : 'Start orbit'}
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: isOrbiting ? 'rgba(42,181,160,0.3)' : 'rgba(13,24,41,0.85)',
+                backdropFilter: 'blur(12px)',
+                color: isOrbiting ? '#2ab5a0' : 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                transition: 'background 0.2s, color 0.2s',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/>
+              </svg>
+            </button>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
             <button
               onClick={() => mapRef.current?.zoomIn()}
               style={{
