@@ -2,10 +2,13 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
 const ALL_CARDS = [
-  { src: '/heroes/hero4.png', label: 'Indonesia' },
-  { src: '/heroes/hero5.png', label: 'Peru'      },
-  { src: '/heroes/hero6.png', label: 'Morocco'   },
-  { src: '/heroes/hero7.png', label: 'Costa Rica'},
+  { src: '/heroes/hero1.png', label: 'Morocco'    },
+  { src: '/heroes/hero2.png', label: 'Portugal'   },
+  { src: '/heroes/hero3.png', label: 'Costa Rica' },
+  { src: '/heroes/hero4.png', label: 'India'      },
+  { src: '/heroes/hero5.png', label: 'Greece'     },
+  { src: '/heroes/hero6.png', label: 'Peru'       },
+  { src: '/heroes/hero7.png', label: 'Indonesia'  },
 ];
 
 const STAMP_POSITIONS = [
