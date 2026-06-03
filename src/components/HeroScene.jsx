@@ -326,9 +326,9 @@ export default function HeroScene({ onExplore }) {
           boxShadow: '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)',
           transform: 'translate(-50%, -50%)',
           pointerEvents: 'none',
-          zIndex: 9999,
+          zIndex: 99999,
           transition: 'width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, opacity 0.35s ease',
-          mixBlendMode: 'screen',
+          mixBlendMode: 'normal',
         }}
       />
 
