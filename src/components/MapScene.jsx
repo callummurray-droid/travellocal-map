@@ -5,6 +5,7 @@ import { MAPBOX_TOKEN, EXPERT_COUNTRIES, COUNTRY_CONFIG } from '../data/countrie
 import { EXTRA_COUNTRY_CONFIG } from '../data/countries';
 import SidePanel from './SidePanel';
 import CountryPopup from './CountryPopup';
+import MusicPlayer from './MusicPlayer';
 
 // Merge all configs
 const ALL_CONFIG = { ...COUNTRY_CONFIG, ...EXTRA_COUNTRY_CONFIG };
@@ -169,6 +170,17 @@ const COUNTRY_FLY = {
   Germany:  { center: [10.5, 51.5], zoom: 5.5 },
   India:    { center: [79.0, 22.0], zoom: 4.5 },
   default:  { center: null, zoom: 5 },
+};
+
+// Country audio tracks — add MP3s to /public/audio/
+const COUNTRY_AUDIO = {
+  Italy:    '/audio/italy.mp3',
+  France:   '/audio/france.mp3',
+  Japan:    '/audio/japan.mp3',
+  Morocco:  '/audio/morocco.mp3',
+  Spain:    '/audio/spain.mp3',
+  Greece:   '/audio/greece.mp3',
+  Portugal: '/audio/portugal.mp3',
 };
 
 export default function MapScene({ visible }) {
@@ -778,17 +790,6 @@ export default function MapScene({ visible }) {
     });
   };
 
-  // Country audio tracks — add MP3s to /public/audio/
-  const COUNTRY_AUDIO = {
-    Italy:    '/audio/italy.mp3',
-    France:   '/audio/france.mp3',
-    Japan:    '/audio/japan.mp3',
-    Morocco:  '/audio/morocco.mp3',
-    Spain:    '/audio/spain.mp3',
-    Greece:   '/audio/greece.mp3',
-    Portugal: '/audio/portugal.mp3',
-  };
-
   const stopAudio = (immediate = false) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -1183,6 +1184,13 @@ export default function MapScene({ visible }) {
         country={selectedCountry?.name}
         config={selectedCountry?.config}
         onClose={closePanel}
+      />
+
+      {/* Music player — appears when country with audio is selected */}
+      <MusicPlayer
+        country={selectedCountry?.name}
+        audioRef={audioRef}
+        visible={panelOpen && !!COUNTRY_AUDIO[selectedCountry?.name] && !mode3D}
       />
 
       {/* Custom teal cursor with arrow on expand */}
