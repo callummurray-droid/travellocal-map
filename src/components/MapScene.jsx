@@ -456,6 +456,7 @@ export default function MapScene({ visible }) {
         display: flex; flex-direction: column; align-items: center;
         cursor: pointer; pointer-events: auto;
         transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        position: relative; z-index: 40;
       `;
       el.onmouseenter = () => { el.style.transform = 'scale(1.2)'; };
       el.onmouseleave = () => { el.style.transform = 'scale(1)'; };
@@ -766,14 +767,18 @@ export default function MapScene({ visible }) {
         </div>
       </div>
 
-      {/* Panel overlay */}
+      {/* Panel overlay — only covers map area, not the panel itself */}
       {panelOpen && (
-        <div className="absolute inset-0 z-30" style={{ pointerEvents: 'none' }}>
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', pointerEvents: 'auto' }}
-            onClick={closePanel}
-          />
-        </div>
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            right: 560, // leave panel width clear
+            zIndex: 30,
+            background: 'rgba(0,0,0,0.25)',
+            pointerEvents: 'auto',
+          }}
+          onClick={closePanel}
+        />
       )}
 
       {/* Side panel */}
