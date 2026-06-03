@@ -2,13 +2,10 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
 const ALL_CARDS = [
-  { src: '/heroes/hero1.png', label: 'August – October', flag: '🇺🇸' },
-  { src: '/heroes/hero2.png', label: 'April – July',     flag: '🇲🇽' },
-  { src: '/heroes/hero3.png', label: 'June – August',    flag: '🇨🇦' },
-  { src: '/heroes/hero4.png', label: 'Year round',       flag: '🇮🇩' },
-  { src: '/heroes/hero5.png', label: 'March – October',  flag: '🇵🇪' },
-  { src: '/heroes/hero6.png', label: 'May – October',    flag: '🇬🇷' },
-  { src: '/heroes/hero7.png', label: 'September – June', flag: '🇮🇳' },
+  { src: '/heroes/hero4.png', label: 'Indonesia' },
+  { src: '/heroes/hero5.png', label: 'Peru'      },
+  { src: '/heroes/hero6.png', label: 'Morocco'   },
+  { src: '/heroes/hero7.png', label: 'Costa Rica'},
 ];
 
 const STAMP_POSITIONS = [
@@ -27,125 +24,82 @@ export default function HeroScene({ onExplore }) {
   const currentRef = useRef(0);
   const timerRef   = useRef(null);
 
-  // Build card deck order — fan of 3 visible, rest stacked behind
   const initDeck = () => {
-    const cards = cardsRef.current;
+    const cards = cardsRef.current.filter(Boolean);
     if (!cards.length) return;
     cards.forEach((card, i) => {
-      const offset = i - currentRef.current;
-      const pos = ((offset % cards.length) + cards.length) % cards.length;
-      const isTop    = pos === 0;
-      const isSecond = pos === 1;
-      const isThird  = pos === 2;
-
+      const pos = ((i - currentRef.current) % cards.length + cards.length) % cards.length;
       gsap.set(card, {
         zIndex:   cards.length - pos,
-        x:        isTop ? 0 : isSecond ? 28 : isThird ? 50 : 60,
-        y:        isTop ? 0 : isSecond ? -14 : isThird ? -24 : -30,
-        rotation: isTop ? 2 : isSecond ? 8 : isThird ? 13 : 16,
-        scale:    isTop ? 1 : isSecond ? 0.94 : isThird ? 0.88 : 0.84,
+        x:        pos === 0 ? 0  : pos === 1 ? 24 : pos === 2 ? 44 : 58,
+        y:        pos === 0 ? 0  : pos === 1 ? -12 : pos === 2 ? -22 : -28,
+        rotation: pos === 0 ? 2  : pos === 1 ? 7   : pos === 2 ? 12  : 15,
+        scale:    pos === 0 ? 1  : pos === 1 ? 0.95 : pos === 2 ? 0.89 : 0.84,
         opacity:  pos < 4 ? 1 : 0,
       });
     });
   };
 
   const advanceCard = () => {
-    const cards = cardsRef.current;
+    const cards = cardsRef.current.filter(Boolean);
     if (!cards.length) return;
-
     const topCard = cards[currentRef.current];
 
-    // Fly top card off to the left
     gsap.to(topCard, {
-      x: -500,
-      y: -80,
-      rotation: -25,
-      opacity: 0,
-      duration: 0.65,
-      ease: 'power3.in',
+      x: -520, y: -100, rotation: -28, opacity: 0,
+      duration: 0.6, ease: 'power3.in',
       onComplete: () => {
-        // Reset it to back of stack position instantly
-        gsap.set(topCard, { x: 65, y: -32, rotation: 18, scale: 0.82, zIndex: 0, opacity: 0 });
-        // Fade it back in at the back
-        gsap.to(topCard, { opacity: 1, duration: 0.3, delay: 0.1 });
+        gsap.set(topCard, { x: 62, y: -30, rotation: 17, scale: 0.83, zIndex: 0, opacity: 0 });
+        gsap.to(topCard, { opacity: 1, duration: 0.25, delay: 0.05 });
       },
     });
 
-    // Advance all other cards forward
     currentRef.current = (currentRef.current + 1) % cards.length;
-    const nextCards = cards.filter((_, i) => i !== cards.indexOf(topCard));
 
     cards.forEach((card, i) => {
       if (card === topCard) return;
-      const offset = ((i - currentRef.current) % cards.length + cards.length) % cards.length;
-      const isTop    = offset === 0;
-      const isSecond = offset === 1;
-      const isThird  = offset === 2;
-
+      const pos = ((i - currentRef.current) % cards.length + cards.length) % cards.length;
       gsap.to(card, {
-        x:        isTop ? 0 : isSecond ? 28 : isThird ? 50 : 60,
-        y:        isTop ? 0 : isSecond ? -14 : isThird ? -24 : -30,
-        rotation: isTop ? 2 : isSecond ? 8 : isThird ? 13 : 16,
-        scale:    isTop ? 1 : isSecond ? 0.94 : isThird ? 0.88 : 0.84,
-        zIndex:   cards.length - offset,
-        duration: 0.6,
-        ease: 'power3.out',
+        x:        pos === 0 ? 0  : pos === 1 ? 24 : pos === 2 ? 44 : 58,
+        y:        pos === 0 ? 0  : pos === 1 ? -12 : pos === 2 ? -22 : -28,
+        rotation: pos === 0 ? 2  : pos === 1 ? 7   : pos === 2 ? 12  : 15,
+        scale:    pos === 0 ? 1  : pos === 1 ? 0.95 : pos === 2 ? 0.89 : 0.84,
+        zIndex:   cards.length - pos,
+        duration: 0.55, ease: 'power3.out',
       });
     });
   };
 
   useEffect(() => {
-    // Start auto-cycling after initial animation
     timerRef.current = setInterval(advanceCard, 2800);
     return () => clearInterval(timerRef.current);
   }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Set initial deck positions
       initDeck();
-
       const tl = gsap.timeline({ delay: 0.2 });
 
-      // Nav
       tl.to('#tl-nav', { opacity: 1, duration: 0.7, ease: 'power3.out' }, 0);
 
-      // Stamps fly in from off-screen
       STAMP_POSITIONS.forEach((stamp, i) => {
-        const el = `#stamp-${stamp.id}`;
         const fromX = stamp.left !== undefined ? -400 : 400;
-        gsap.set(el, { opacity: 0, x: fromX, rotation: stamp.rotate * 1.8 });
-        tl.to(el, {
-          opacity: 0.92,
-          x: 0,
-          rotation: stamp.rotate,
-          duration: 1.1,
-          ease: 'back.out(1.2)',
+        gsap.set(`#stamp-${stamp.id}`, { opacity: 0, x: fromX, rotation: stamp.rotate * 1.8 });
+        tl.to(`#stamp-${stamp.id}`, {
+          opacity: 0.92, x: 0, rotation: stamp.rotate,
+          duration: 1.1, ease: 'back.out(1.2)',
         }, 0.05 + i * 0.08);
       });
 
-      // Card deck rises up
       gsap.set(deckRef.current, { opacity: 0, y: 60 });
-      tl.to(deckRef.current, {
-        opacity: 1, y: 0,
-        duration: 0.9,
-        ease: 'power4.out',
-      }, 0.3);
+      tl.to(deckRef.current, { opacity: 1, y: 0, duration: 0.9, ease: 'power4.out' }, 0.3);
 
-      // Headline words slide up
       gsap.set('.headline-word-inner', { y: '110%' });
-      tl.to('.headline-word-inner', {
-        y: '0%',
-        duration: 0.85,
-        stagger: 0.05,
-        ease: 'power4.out',
-      }, 0.65);
+      tl.to('.headline-word-inner', { y: '0%', duration: 0.85, stagger: 0.05, ease: 'power4.out' }, 0.65);
 
-      // Trustpilot
       gsap.set('#trustpilot', { opacity: 0, y: 14 });
       tl.to('#trustpilot', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 1.2);
 
-      // CTA
       gsap.set('#cta-btn', { opacity: 0, scale: 0.82, y: 10 });
       tl.to('#cta-btn', { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: 'back.out(2.2)' }, 1.4);
 
@@ -161,8 +115,8 @@ export default function HeroScene({ onExplore }) {
       .to('#cta-btn', { scale: 0.95, duration: 0.08, ease: 'power2.in' });
 
     tl.to('.headline-word-inner', { y: '110%', duration: 0.45, stagger: 0.03, ease: 'power3.in' }, 0.15)
-      .to('#trustpilot', { opacity: 0, y: -10, duration: 0.3, ease: 'power2.in' }, 0.15)
-      .to('#cta-btn',    { opacity: 0, scale: 0.9, y: 10, duration: 0.3, ease: 'power2.in' }, 0.22)
+      .to('#trustpilot',   { opacity: 0, y: -10, duration: 0.3, ease: 'power2.in' }, 0.15)
+      .to('#cta-btn',      { opacity: 0, scale: 0.9, duration: 0.3, ease: 'power2.in' }, 0.22)
       .to(deckRef.current, { opacity: 0, scale: 0.85, y: -30, duration: 0.5, ease: 'power3.in' }, 0.12)
       .to(STAMP_POSITIONS.map(s => `#stamp-${s.id}`), {
         opacity: 0, scale: 0.4, duration: 0.45, stagger: 0.04, ease: 'power3.in',
@@ -175,12 +129,10 @@ export default function HeroScene({ onExplore }) {
   return (
     <div ref={sceneRef} className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden select-none">
 
-      {/* Vertical gradient matching Figma */}
       <div className="absolute inset-0" style={{
         background: 'linear-gradient(180deg, #1c3260 0%, #162a50 30%, #101f3c 65%, #0d1829 100%)'
       }}/>
 
-      {/* Stamps — screen blend removes black backgrounds */}
       {STAMP_POSITIONS.map(stamp => (
         <img
           key={stamp.id}
@@ -205,31 +157,38 @@ export default function HeroScene({ onExplore }) {
       <div
         ref={deckRef}
         className="relative z-10 mb-10 cursor-pointer"
-        style={{ width: 240, height: 280 }}
-        onClick={() => advanceCard()}
+        style={{ width: 240, height: 290 }}
+        onClick={advanceCard}
+        title="Click to see next destination"
       >
         {ALL_CARDS.map((card, i) => (
           <div
             key={card.src}
-            ref={el => cardsRef.current[i] = el}
+            ref={el => { cardsRef.current[i] = el; }}
             className="absolute inset-0"
             style={{
               borderRadius: 20,
               overflow: 'hidden',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+              boxShadow: '0 28px 70px rgba(0,0,0,0.65)',
               willChange: 'transform',
             }}
           >
             <img
               src={card.src}
               alt={card.label}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+                pointerEvents: 'none',
+                imageRendering: 'high-quality',
+              }}
             />
           </div>
         ))}
       </div>
 
-      {/* Headline */}
       <h1
         className="relative text-center text-white z-10 mb-4"
         style={{
@@ -248,7 +207,6 @@ export default function HeroScene({ onExplore }) {
         ))}
       </h1>
 
-      {/* Trustpilot */}
       <div id="trustpilot" className="flex items-center gap-2 mb-7 z-10">
         <span style={{ fontFamily: 'Mulish, sans-serif', color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Excellent</span>
         <div className="flex gap-1">
@@ -264,7 +222,6 @@ export default function HeroScene({ onExplore }) {
         <span style={{ fontFamily: 'Mulish, sans-serif', color: '#00b67a', fontSize: 13, fontWeight: 600 }}>★ Trustpilot</span>
       </div>
 
-      {/* CTA */}
       <button id="cta-btn" className="cta-btn z-10" onClick={handleExplore}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -272,9 +229,8 @@ export default function HeroScene({ onExplore }) {
         Let's explore the world together
       </button>
 
-      {/* Tap hint */}
-      <p style={{ fontFamily: 'Mulish, sans-serif', color: 'rgba(255,255,255,0.25)', fontSize: 11, marginTop: 16, zIndex: 10, letterSpacing: '0.06em' }}>
-        tap the cards to explore
+      <p style={{ fontFamily: 'Mulish, sans-serif', color: 'rgba(255,255,255,0.25)', fontSize: 11, marginTop: 14, zIndex: 10, letterSpacing: '0.06em' }}>
+        tap the cards to explore destinations
       </p>
     </div>
   );
