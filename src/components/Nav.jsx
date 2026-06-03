@@ -56,12 +56,12 @@ export default function Nav() {
     }
   };
 
-  // Shared glass style — exactly matching Figma
+  // Shared glass style — from Figma dev mode
   const glassStyle = {
-    background: 'rgba(58, 62, 70, 0.82)',
-    backdropFilter: 'blur(28px)',
-    WebkitBackdropFilter: 'blur(28px)',
-    border: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(250, 248, 245, 0.40)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    border: 'none',
   };
 
   return (
@@ -74,13 +74,13 @@ export default function Nav() {
           position: 'fixed',
           top: 16,
           left: 16,
-          right: 80, // leaves space for hamburger
+          right: 112, // 80px hamburger + 16px gap + 16px from edge
           zIndex: 100,
           opacity: 0,
           ...glassStyle,
-          borderRadius: 14,
-          padding: '0 28px',
-          height: 60,
+          borderRadius: 20, // 1.25rem
+          padding: '0 24px',
+          height: 80, // 5rem
           display: 'flex',
           alignItems: 'center',
         }}
@@ -90,15 +90,15 @@ export default function Nav() {
           <div style={{ position: 'relative', width: 42, height: 42 }}>
             {/* Bracket corners */}
             <svg width="42" height="42" viewBox="0 0 42 42" fill="none" style={{ position: 'absolute', inset: 0 }}>
-              <path d="M3 13 L3 3 L13 3"   stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M29 39 L39 39 L39 29" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 13 L3 3 L13 3"   stroke="#152238" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M29 39 L39 39 L39 29" stroke="#152238" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             {/* Text */}
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Georgia, serif', color: 'white',
+              fontFamily: 'Georgia, serif', color: '#152238',
               fontSize: 9.5, fontWeight: 600, lineHeight: 1.3,
               textAlign: 'center', letterSpacing: '0.02em',
             }}>
@@ -120,15 +120,15 @@ export default function Nav() {
               className="nav-link"
               style={{
                 fontFamily: 'Mulish, sans-serif',
-                color: 'rgba(255,255,255,0.85)',
+                color: 'rgba(21, 34, 56, 0.85)',
                 fontSize: 15,
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
                 opacity: 0,
                 display: 'block',
               }}
-              onMouseEnter={e => { e.target.style.color = 'white'; }}
-              onMouseLeave={e => { e.target.style.color = 'rgba(255,255,255,0.85)'; }}
+              onMouseEnter={e => { e.target.style.color = '#152238'; }}
+              onMouseLeave={e => { e.target.style.color = 'rgba(21, 34, 56, 0.85)'; }}
             >
               {link}
             </a>
@@ -143,7 +143,7 @@ export default function Nav() {
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(21, 34, 56, 0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </button>
@@ -153,7 +153,7 @@ export default function Nav() {
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(21, 34, 56, 0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             </svg>
@@ -169,9 +169,9 @@ export default function Nav() {
           top: 16,
           right: 16,
           zIndex: 101,
-          width: 60,
-          height: 60,
-          borderRadius: 14,
+          width: 80,
+          height: 80,
+          borderRadius: 20,
           ...glassStyle,
           cursor: 'pointer',
           display: 'flex',
@@ -193,7 +193,7 @@ export default function Nav() {
               width: 22,
               height: 2.5,
               borderRadius: 2,
-              background: '#1a3056', // navy blue lines matching Figma
+              background: '#152238', // navy on light glass
               transformOrigin: 'center',
               flexShrink: 0,
             }}
