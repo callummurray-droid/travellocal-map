@@ -178,6 +178,9 @@ export default function MapScene({ visible }) {
   const cursorRef     = useRef(null);
   const hideTimerRef  = useRef(null);
   const poiMarkersRef = useRef([]);
+  const is3DRef       = useRef(false);
+  const [mode3D, setMode3D]   = useState(false);
+  const [activePOI, setActivePOI] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -195,7 +198,7 @@ export default function MapScene({ visible }) {
       center: [12, 48],
       zoom: 4.2,
       minZoom: 1.5,
-      maxZoom: 10,
+      maxZoom: 18,
       projection: 'mercator',
     });
 
@@ -205,6 +208,32 @@ export default function MapScene({ visible }) {
       // Style overrides to match design
       map.setPaintProperty('background', 'background-color', '#0d1829');
       map.setPaintProperty('water', 'fill-color', '#0a1525');
+
+      // 3D terrain — Mapbox DEM elevation source
+      map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      // Terrain off by default — enabled on POI dive-in
+      // map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.8 });
+
+      // 3D buildings layer
+      map.addLayer({
+        id: 'buildings-3d',
+        source: 'composite',
+        'source-layer': 'building',
+        filter: ['==', 'extrude', 'true'],
+        type: 'fill-extrusion',
+        minzoom: 12,
+        paint: {
+          'fill-extrusion-color': '#1a2e4a',
+          'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'height']],
+          'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'min_height']],
+          'fill-extrusion-opacity': 0.7,
+        },
+      });
 
       // Country fill layer for hover/select
       map.addSource('countries', {
@@ -420,37 +449,97 @@ export default function MapScene({ visible }) {
     clearPOIs();
     const pois = COUNTRY_POIS[name];
     if (!pois || !mapRef.current) return;
+
     pois.forEach(poi => {
       const el = document.createElement('div');
       el.style.cssText = `
         display: flex; flex-direction: column; align-items: center;
-        pointer-events: none; cursor: default;
+        cursor: pointer; pointer-events: auto;
+        transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
       `;
+      el.onmouseenter = () => { el.style.transform = 'scale(1.2)'; };
+      el.onmouseleave = () => { el.style.transform = 'scale(1)'; };
+
       const dot = document.createElement('div');
       dot.style.cssText = `
-        width: 8px; height: 8px; border-radius: 50%;
-        background: #152238; border: 2px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        width: 10px; height: 10px; border-radius: 50%;
+        background: #2ab5a0; border: 2px solid white;
+        box-shadow: 0 0 0 3px rgba(42,181,160,0.3), 0 2px 8px rgba(0,0,0,0.4);
+        transition: background 0.2s;
       `;
+
       const label = document.createElement('div');
       label.textContent = poi.name;
       label.style.cssText = `
-        margin-top: 4px; padding: 2px 7px;
-        background: rgba(21,34,56,0.85); color: white;
-        font-family: Mulish, sans-serif; font-size: 10px; font-weight: 600;
-        border-radius: 4px; white-space: nowrap;
-        backdrop-filter: blur(4px);
+        margin-top: 5px; padding: 3px 9px;
+        background: rgba(21,34,56,0.9); color: white;
+        font-family: Mulish, sans-serif; font-size: 10px; font-weight: 700;
+        border-radius: 6px; white-space: nowrap;
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(42,181,160,0.4);
+        letter-spacing: 0.03em;
       `;
+
       el.appendChild(dot);
       el.appendChild(label);
+
+      // Click → 3D dive-in
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        diveIntoPOI(poi);
+      });
+
       const marker = new mapboxgl.Marker({ element: el, anchor: 'top' })
         .setLngLat(poi.coords)
         .addTo(mapRef.current);
+
       poiMarkersRef.current.push(marker);
     });
   };
 
-  const selectCountry = (name, featureId) => {
+  const diveIntoPOI = (poi) => {
+    const map = mapRef.current;
+    if (!map) return;
+    is3DRef.current = true;
+    setMode3D(true);
+    setActivePOI(poi);
+
+    // Enable terrain
+    map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.8 });
+
+    // Cinematic fly-in — low angle, tilted, dramatic
+    map.flyTo({
+      center: poi.coords,
+      zoom: 14.5,
+      pitch: 70,
+      bearing: -25,
+      duration: 3500,
+      essential: true,
+      easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
+    });
+  };
+
+  const exit3D = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    is3DRef.current = false;
+    setMode3D(false);
+    setActivePOI(null);
+
+    // Disable terrain
+    map.setTerrain(null);
+
+    // Fly back out to country level
+    const fly = selectedCountry ? (COUNTRY_FLY[selectedCountry.name] || COUNTRY_FLY.default) : COUNTRY_FLY.default;
+    map.flyTo({
+      center: fly.center || [12, 48],
+      zoom: fly.zoom || 5,
+      pitch: 0,
+      bearing: 0,
+      duration: 2000,
+      essential: true,
+    });
+  };
     const config = ALL_CONFIG[name];
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
@@ -544,6 +633,43 @@ export default function MapScene({ visible }) {
     <div className="fixed inset-0 z-10" style={{ cursor: 'none' }}>
       {/* Map */}
       <div ref={mapContainer} className="absolute inset-0" />
+
+      {/* 3D mode overlay — POI name + exit button */}
+      {mode3D && activePOI && (
+        <div style={{
+          position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 60, display: 'flex', alignItems: 'center', gap: 12,
+          animation: 'fadeInHint 0.4s ease both',
+        }}>
+          {/* POI name pill */}
+          <div style={{
+            background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(42,181,160,0.4)',
+            borderRadius: 12, padding: '10px 18px',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ab5a0', flexShrink: 0 }}/>
+            <span style={{ fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700, color: 'white' }}>
+              Exploring {activePOI.name} in 3D
+            </span>
+          </div>
+          {/* Exit button */}
+          <button
+            onClick={exit3D}
+            style={{
+              background: 'rgba(250,248,245,0.92)', backdropFilter: 'blur(16px)',
+              border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'none',
+              fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700,
+              color: '#152238', display: 'flex', alignItems: 'center', gap: 7,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#152238" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M3 12h18M3 6h18M3 18h18"/>
+            </svg>
+            Exit 3D
+          </button>
+        </div>
+      )}
 
       {/* Country hover popup — sticky, clean dark card */}
       {hoveredCountry && !panelOpen && (
