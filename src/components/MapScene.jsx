@@ -168,6 +168,8 @@ const COUNTRY_FLY = {
   India:    { center: [79.0, 22.0], zoom: 4.5 },
   default:  { center: null, zoom: 5 },
 };
+
+export default function MapScene({ visible }) {
   const mapContainer  = useRef(null);
   const mapRef        = useRef(null);
   const markersRef    = useRef([]);
