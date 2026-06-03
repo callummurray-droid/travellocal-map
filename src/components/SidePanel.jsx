@@ -423,41 +423,23 @@ export default function SidePanel({ country, config, activePOI, onClose }) {
 
         <DIVIDER />
 
-        {/* Expert section */}
+        {/* Expert section — always show full grid */}
         <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 19, fontWeight: 400, color: '#152238', margin: '0 0 20px' }}>
-          {poi ? `Your ${title} expert` : `From our local experts in ${country}`}
+          From our local experts in Italy
         </h3>
 
-        {poi ? (
-          // Single expert highlighted for POI
-          <div style={{ display: 'flex', gap: 16, marginBottom: 20, alignItems: 'center' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 16, overflow: 'hidden', flexShrink: 0 }}>
-              <img src={poi.expert.img} alt={poi.expert.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}/>
-            </div>
-            <div>
-              <p style={{ fontFamily: 'Georgia, serif', fontSize: 17, fontWeight: 400, color: '#152238', margin: '0 0 3px' }}>{poi.expert.name}</p>
-              <p style={{ fontSize: 12, color: '#2ab5a0', fontWeight: 600, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{poi.expert.role}</p>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {[1,2,3,4,5].map(s => <svg key={s} width="10" height="10" viewBox="0 0 24 24" fill="#FDCB6E"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-                <span style={{ fontSize: 11, color: '#8a9aaa', marginLeft: 4 }}>5.0 · 142 trips</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
+          {(LOCAL_EXPERTS[country] || LOCAL_EXPERTS.Italy).map((expert, i) => (
+            <div key={i} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', aspectRatio: '4/5' }}>
+              <img src={expert.img} alt={expert.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}/>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(13,24,41,0.75) 100%)' }}/>
+              <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 2px', fontFamily: 'Georgia, serif' }}>{expert.name}</p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{expert.role}</p>
               </div>
             </div>
-          </div>
-        ) : (
-          // 2x2 grid for country view
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
-            {experts.map((expert, i) => (
-              <div key={i} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', aspectRatio: '4/5' }}>
-                <img src={expert.img} alt={expert.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}/>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(13,24,41,0.75) 100%)' }}/>
-                <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 2px', fontFamily: 'Georgia, serif' }}>{expert.name}</p>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{expert.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
 
         <div style={{ background: 'white', borderRadius: 16, padding: '20px 22px', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', borderLeft: '3px solid #2ab5a0' }}>
           <p style={{ fontSize: 14, color: '#3d4f5c', lineHeight: 1.8, fontStyle: 'italic', margin: 0, whiteSpace: 'pre-line' }}>{quote}</p>
