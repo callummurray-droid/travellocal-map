@@ -315,3 +315,9 @@ export const STAMP_CONFIG = [
   { id: 'brazil',      src: '/stamps/brazil.png',       style: { top: '12%', right: '2%',  width: 140, rotate:  8,  zIndex: 4 } },
   { id: 'mexico',      src: '/stamps/mexico.png',       style: { top: '58%', right: '1%',  width: 145, rotate: -6,  zIndex: 3 } },
 ];
+
+// Additional entries added separately
+export const EXTRA_COUNTRY_CONFIG = {
+  'United Kingdom': { colour: '#012169', borderColour: '#C8102E', coordinates: '51.5074° N, 0.1276° W', capital: 'London', description: "London's world-class museums, Scottish Highlands, Cotswolds villages and the Lake District — the UK packs extraordinary variety into four nations.", bestTime: [{ label: 'Summer', value: 'June – August' }], highlights: ['Scottish Highlands road trip', 'Cotswolds village walks', 'London cultural scene'], images: ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80'], flag: '🇬🇧', region: 'London, United Kingdom', season: 'May – September' },
+  Sweden: { colour: '#006AA7', borderColour: '#FECC02', coordinates: '59.3293° N, 18.0686° E', capital: 'Stockholm', description: "Stockholm's island city, Lapland reindeer sleds, midnight sun kayaking and the world's first open-air museum.", bestTime: [{ label: 'Midnight sun', value: 'June – July' }], highlights: ['Stockholm archipelago kayaking', 'Abisko northern lights', 'Gothenburg seafood'], images: ['https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=800&q=80'], flag: '🇸🇪', region: 'Stockholm, Sweden', season: 'June – August' },
+};

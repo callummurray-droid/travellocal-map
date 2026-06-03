@@ -2,8 +2,36 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { gsap } from 'gsap';
 import { MAPBOX_TOKEN, EXPERT_COUNTRIES, COUNTRY_CONFIG } from '../data/countries';
+import { EXTRA_COUNTRY_CONFIG } from '../data/countries';
 import SidePanel from './SidePanel';
 import CountryPopup from './CountryPopup';
+
+// Merge all configs
+const ALL_CONFIG = { ...COUNTRY_CONFIG, ...EXTRA_COUNTRY_CONFIG };
+
+// Map Mapbox name_en values → our config keys
+const NAME_MAP = {
+  'United Kingdom':        'United Kingdom',
+  'Scotland':              'United Kingdom',
+  'Wales':                 'United Kingdom',
+  'England':               'United Kingdom',
+  'Northern Ireland':      'United Kingdom',
+  'Ecuador':               'Ecuador and Galapagos',
+  'Czech Republic':        'Czech Republic',
+  'United Arab Emirates':  'United Arab Emirates',
+  'South Africa':          'South Africa',
+  'New Zealand':           'New Zealand',
+  'Costa Rica':            'Costa Rica',
+  'Sri Lanka':             'Sri Lanka',
+  'Azores':                'Azores',
+};
+
+function resolveCountryName(mapboxName) {
+  if (!mapboxName) return null;
+  if (NAME_MAP[mapboxName]) return NAME_MAP[mapboxName];
+  if (ALL_CONFIG[mapboxName]) return mapboxName;
+  return null;
+}
 
 // Country card images from Act 1 marquee — used for hover popups
 const COUNTRY_CARDS = {
@@ -297,7 +325,8 @@ export default function MapScene({ visible }) {
       // Hover interaction
       map.on('mousemove', 'country-fills', (e) => {
         if (panelOpen) return;
-        const name = e.features[0]?.properties?.name_en;
+        const raw = e.features[0]?.properties?.name_en;
+        const name = resolveCountryName(raw);
         if (!name) return;
 
         if (hoveredIdRef.current !== null) {
@@ -307,11 +336,9 @@ export default function MapScene({ visible }) {
         map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredIdRef.current }, { hovered: true });
         map.getCanvas().style.cursor = 'pointer';
 
-        // Convert lng/lat to screen pixel position for popup anchoring
         const point = map.project(e.lngLat);
         setHoveredCountry({ name, x: point.x, y: point.y });
 
-        // Expand cursor over countries
         const cur = cursorRef.current;
         const arr = document.getElementById('map-cursor-arrow');
         if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
@@ -337,7 +364,8 @@ export default function MapScene({ visible }) {
 
       // Click interaction
       map.on('click', 'country-fills', (e) => {
-        const name = e.features[0]?.properties?.name_en;
+        const raw = e.features[0]?.properties?.name_en;
+        const name = resolveCountryName(raw);
         if (!name) return;
         selectCountry(name, e.features[0].id);
       });
@@ -353,7 +381,7 @@ export default function MapScene({ visible }) {
   }, [visible]);
 
   const selectCountry = (name, featureId) => {
-    const config = COUNTRY_CONFIG[name];
+    const config = ALL_CONFIG[name];
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
 
@@ -396,7 +424,7 @@ export default function MapScene({ visible }) {
   const flyToCountry = (name) => {
     setSuggestions([]);
     setSearchVal(name);
-    const config = COUNTRY_CONFIG[name];
+    const config = ALL_CONFIG[name];
     if (config && mapRef.current) {
       mapRef.current.flyTo({ center: [12, 45], zoom: 5, duration: 1200 });
       setTimeout(() => selectCountry(name, null), 1300);
@@ -436,9 +464,9 @@ export default function MapScene({ visible }) {
           country={hoveredCountry.name}
           x={hoveredCountry.x}
           y={hoveredCountry.y}
-          config={COUNTRY_CONFIG[hoveredCountry.name]}
+          config={ALL_CONFIG[hoveredCountry.name]}
           onExplore={() => {
-            const config = COUNTRY_CONFIG[hoveredCountry.name];
+            const config = ALL_CONFIG[hoveredCountry.name];
             if (config) selectCountry(hoveredCountry.name, null);
           }}
           onMouseEnter={() => {
