@@ -3,32 +3,51 @@ import { gsap } from 'gsap';
 
 const LINKS = ['Destinations', 'Inspiration', 'Trip ideas', 'How it works'];
 
+// Shared glass — rgba(250,248,245,0.40) from Figma
+const glass = {
+  background: 'rgba(250, 248, 245, 0.40)',
+  backdropFilter: 'blur(24px)',
+  WebkitBackdropFilter: 'blur(24px)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: 20, // 1.25rem
+};
+
+// Text style: Mulish Regular 18px, line-height 160%
+const navLinkStyle = {
+  fontFamily: 'Mulish, sans-serif',
+  fontWeight: 400,
+  fontSize: 18,
+  lineHeight: '160%',
+  letterSpacing: '0%',
+  color: 'rgba(255,255,255,0.9)',
+  textDecoration: 'none',
+  whiteSpace: 'nowrap',
+  opacity: 0,
+  display: 'block',
+  transition: 'color 0.2s',
+};
+
 export default function Nav() {
   const [open, setOpen] = useState(false);
-  const navRef    = useRef(null);
-  const tlRef     = useRef(null);
-  const line1Ref  = useRef(null);
-  const line2Ref  = useRef(null);
-  const line3Ref  = useRef(null);
+  const navRef   = useRef(null);
+  const tlRef    = useRef(null);
+  const line1Ref = useRef(null);
+  const line2Ref = useRef(null);
+  const line3Ref = useRef(null);
 
   useEffect(() => {
     const tl = gsap.timeline({ paused: true });
 
-    // Nav pill scales in from hamburger side
     tl.fromTo(navRef.current,
       { scaleX: 0, opacity: 0, transformOrigin: 'right center' },
       { scaleX: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.3)' },
       0
     );
-
-    // Links stagger up with bounce
     tl.fromTo('.nav-link',
       { opacity: 0, y: 10 },
       { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'back.out(1.7)' },
       0.2
     );
-
-    // Icons bounce in
     tl.fromTo('.nav-icon',
       { opacity: 0, scale: 0.7 },
       { opacity: 1, scale: 1, duration: 0.35, stagger: 0.06, ease: 'back.out(2)' },
@@ -56,51 +75,45 @@ export default function Nav() {
     }
   };
 
-  // Shared glass style — from Figma dev mode
-  const glassStyle = {
-    background: 'rgba(250, 248, 245, 0.40)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
-    border: 'none',
-  };
-
   return (
     <>
-      {/* Full width nav pill */}
+      {/* Nav pill — max 1206px, centred */}
       <nav
         ref={navRef}
         id="tl-nav"
         style={{
           position: 'fixed',
           top: 16,
-          left: 16,
-          right: 112, // 80px hamburger + 16px gap + 16px from edge
+          left: '50%',
+          transform: 'translateX(-50%)',
           zIndex: 100,
           opacity: 0,
-          ...glassStyle,
-          borderRadius: 20, // 1.25rem
-          padding: '0 24px',
-          height: 80, // 5rem
+          width: 'calc(100% - 32px)',
+          maxWidth: 1206,
+          paddingRight: 96, // clearance for hamburger which sits outside
+          ...glass,
+          height: 80,
           display: 'flex',
           alignItems: 'center',
+          padding: '0 24px',
+          boxSizing: 'border-box',
         }}
       >
-        {/* Logo — bracket corner mark from Figma */}
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', marginRight: 'auto' }}>
-          <div style={{ position: 'relative', width: 42, height: 42 }}>
-            {/* Bracket corners */}
-            <svg width="42" height="42" viewBox="0 0 42 42" fill="none" style={{ position: 'absolute', inset: 0 }}>
-              <path d="M3 13 L3 3 L13 3"   stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M29 39 L39 39 L39 29" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Logo — placeholder bracket mark until icon asset arrives */}
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* TODO: swap this SVG for the real TravelLocal icon PNG once provided */}
+          <div style={{ position: 'relative', width: 44, height: 44 }}>
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <path d="M3 13 L3 3 L13 3"   stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M31 41 L41 41 L41 31" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            {/* Text */}
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               fontFamily: 'Georgia, serif', color: 'white',
-              fontSize: 9.5, fontWeight: 600, lineHeight: 1.3,
-              textAlign: 'center', letterSpacing: '0.02em',
+              fontSize: 9, fontWeight: 600, lineHeight: 1.3,
+              textAlign: 'center',
             }}>
               <span>Travel</span>
               <span>Local</span>
@@ -108,25 +121,21 @@ export default function Nav() {
           </div>
         </div>
 
-        {/* Centred links */}
+        {/* Links — centred absolutely */}
         <div style={{
-          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', alignItems: 'center', gap: 44,
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 40,
         }}>
           {LINKS.map(link => (
             <a
               key={link}
               href="#"
               className="nav-link"
-              style={{
-                fontFamily: 'Mulish, sans-serif',
-                color: 'rgba(255,255,255,0.9)',
-                fontSize: 15,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                opacity: 0,
-                display: 'block',
-              }}
+              style={navLinkStyle}
               onMouseEnter={e => { e.target.style.color = '#ffffff'; }}
               onMouseLeave={e => { e.target.style.color = 'rgba(255,255,255,0.9)'; }}
             >
@@ -135,44 +144,42 @@ export default function Nav() {
           ))}
         </div>
 
-        {/* Right — search and globe */}
+        {/* Right icons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginLeft: 'auto' }}>
-          <button
-            className="nav-icon"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0, padding: 4, display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
+          {[
+            <svg key="s" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
-          <button
-            className="nav-icon"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0, padding: 4, display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
+            </svg>,
+            <svg key="g" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             </svg>
-          </button>
+          ].map((icon, i) => (
+            <button
+              key={i}
+              className="nav-icon"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', padding: 4, opacity: 0,
+              }}
+            >
+              {icon}
+            </button>
+          ))}
         </div>
       </nav>
 
-      {/* Hamburger button — always visible, same glass style */}
+      {/* Hamburger — same glass style, positioned at right edge of nav max-width */}
       <button
         onClick={toggleMenu}
         style={{
           position: 'fixed',
           top: 16,
-          right: 16,
+          right: 'max(16px, calc((100vw - 1206px) / 2))',
           zIndex: 101,
           width: 80,
           height: 80,
-          borderRadius: 20,
-          ...glassStyle,
+          ...glass,
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
@@ -180,10 +187,7 @@ export default function Nav() {
           justifyContent: 'center',
           gap: 5.5,
           padding: 0,
-          transition: 'background 0.2s',
         }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(68, 72, 82, 0.9)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'rgba(58, 62, 70, 0.82)'}
       >
         {[line1Ref, line2Ref, line3Ref].map((ref, i) => (
           <div
@@ -193,7 +197,7 @@ export default function Nav() {
               width: 22,
               height: 2.5,
               borderRadius: 2,
-              background: '#152238', // navy on light glass
+              background: '#152238',
               transformOrigin: 'center',
               flexShrink: 0,
             }}
