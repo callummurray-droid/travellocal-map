@@ -1,192 +1,188 @@
-import { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import { useRef, useState } from 'react';
 
 const LINKS = ['Destinations', 'Inspiration', 'Trip ideas', 'How it works'];
 
-// Shared glass — rgba(250,248,245,0.40) from Figma
 const glass = {
   background: 'rgba(250, 248, 245, 0.40)',
   backdropFilter: 'blur(24px)',
   WebkitBackdropFilter: 'blur(24px)',
-  border: '1px solid rgba(255,255,255,0.15)',
-  borderRadius: 20, // 1.25rem
-};
-
-// Text style: Mulish Regular 18px, line-height 160%
-const navLinkStyle = {
-  fontFamily: 'Mulish, sans-serif',
-  fontWeight: 400,
-  fontSize: 18,
-  lineHeight: '160%',
-  letterSpacing: '0%',
-  color: 'rgba(255,255,255,0.9)',
-  textDecoration: 'none',
-  whiteSpace: 'nowrap',
-  opacity: 0,
-  display: 'block',
-  transition: 'color 0.2s',
+  border: '1px solid rgba(255,255,255,0.18)',
+  borderRadius: 20,
 };
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
-  const navRef   = useRef(null);
-  const tlRef    = useRef(null);
-  const line1Ref = useRef(null);
-  const line2Ref = useRef(null);
-  const line3Ref = useRef(null);
+  const burgerRef = useRef(null);
 
-  useEffect(() => {
-    const tl = gsap.timeline({ paused: true });
-
-    tl.fromTo(navRef.current,
-      { scaleX: 0, opacity: 0, transformOrigin: 'right center' },
-      { scaleX: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.3)' },
-      0
-    );
-    tl.fromTo('.nav-link',
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'back.out(1.7)' },
-      0.2
-    );
-    tl.fromTo('.nav-icon',
-      { opacity: 0, scale: 0.7 },
-      { opacity: 1, scale: 1, duration: 0.35, stagger: 0.06, ease: 'back.out(2)' },
-      0.38
-    );
-
-    tlRef.current = tl;
-  }, []);
-
-  const toggleMenu = () => {
-    const tl = tlRef.current;
-    if (!tl) return;
-    if (!open) {
-      setOpen(true);
-      tl.play();
-      gsap.to(line1Ref.current, { rotation: 45,  y: 7,  duration: 0.3, ease: 'power3.inOut' });
-      gsap.to(line2Ref.current, { opacity: 0,          duration: 0.15 });
-      gsap.to(line3Ref.current, { rotation: -45, y: -7, duration: 0.3, ease: 'power3.inOut' });
-    } else {
-      setOpen(false);
-      tl.reverse();
-      gsap.to(line1Ref.current, { rotation: 0, y: 0, duration: 0.3, ease: 'power3.inOut' });
-      gsap.to(line2Ref.current, { opacity: 1,        duration: 0.25, delay: 0.08 });
-      gsap.to(line3Ref.current, { rotation: 0, y: 0, duration: 0.3, ease: 'power3.inOut' });
-    }
-  };
+  const toggle = () => setOpen(o => !o);
 
   return (
     <>
-      {/* Nav pill — max 1206px, centred */}
-      <nav
-        ref={navRef}
-        id="tl-nav"
-        style={{
-          position: 'fixed',
-          top: 16,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 100,
-          opacity: 0,
-          width: 'calc(100% - 32px)',
-          maxWidth: 1206,
-          paddingRight: 96, // clearance for hamburger which sits outside
-          ...glass,
-          height: 80,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Logo — TravelLocal SVG icon */}
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          <img src="/logo.svg" alt="TravelLocal" style={{ height: 48, width: 'auto', display: 'block' }} />
-        </div>
+      <style>{`
+        #tl-nav-pill {
+          transition: width 0.55s cubic-bezier(0.34, 1.30, 0.64, 1);
+        }
+        .nav-logo {
+          opacity: 0;
+          transform: translateX(-10px);
+          transition: opacity 0.3s ease 0.25s, transform 0.3s ease 0.25s;
+          pointer-events: none;
+        }
+        .nav-open .nav-logo {
+          opacity: 1;
+          transform: translateX(0);
+          pointer-events: auto;
+        }
+        .nav-link {
+          font-family: 'Mulish', sans-serif;
+          font-size: 18px;
+          font-weight: 400;
+          line-height: 160%;
+          color: rgba(255,255,255,0.9);
+          text-decoration: none;
+          white-space: nowrap;
+          opacity: 0;
+          transform: translateY(10px);
+          transition: none;
+        }
+        .nav-open .nav-link:nth-child(1) { opacity:1; transform:translateY(0); transition: opacity 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.22s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.22s; }
+        .nav-open .nav-link:nth-child(2) { opacity:1; transform:translateY(0); transition: opacity 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.29s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.29s; }
+        .nav-open .nav-link:nth-child(3) { opacity:1; transform:translateY(0); transition: opacity 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.36s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.36s; }
+        .nav-open .nav-link:nth-child(4) { opacity:1; transform:translateY(0); transition: opacity 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.43s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.43s; }
+        .nav-link:hover { color: #fff; }
+        .nav-icons {
+          opacity: 0;
+          transform: scale(0.8);
+          transition: opacity 0.3s ease 0.38s, transform 0.3s ease 0.38s;
+          pointer-events: none;
+        }
+        .nav-open .nav-icons {
+          opacity: 1;
+          transform: scale(1);
+          pointer-events: auto;
+        }
+        .h-line {
+          width: 20px;
+          height: 2px;
+          border-radius: 2px;
+          background: rgba(255,255,255,0.9);
+          transform-origin: center;
+          transition: transform 0.28s cubic-bezier(0.76,0,0.24,1), opacity 0.18s ease;
+        }
+        .nav-open .h-line-1 { transform: rotate(45deg) translateY(7px); }
+        .nav-open .h-line-2 { opacity: 0; transform: scaleX(0); }
+        .nav-open .h-line-3 { transform: rotate(-45deg) translateY(-7px); }
+      `}</style>
 
-        {/* Links — centred absolutely */}
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 40,
-        }}>
-          {LINKS.map(link => (
-            <a
-              key={link}
-              href="#"
-              className="nav-link"
-              style={navLinkStyle}
-              onMouseEnter={e => { e.target.style.color = '#ffffff'; }}
-              onMouseLeave={e => { e.target.style.color = 'rgba(255,255,255,0.9)'; }}
-            >
-              {link}
-            </a>
-          ))}
-        </div>
-
-        {/* Right icons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginLeft: 'auto' }}>
-          {[
-            <svg key="s" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>,
-            <svg key="g" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-          ].map((icon, i) => (
-            <button
-              key={i}
-              className="nav-icon"
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', padding: 4, opacity: 0,
-              }}
-            >
-              {icon}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* Hamburger — same glass style, positioned at right edge of nav max-width */}
-      <button
-        onClick={toggleMenu}
-        style={{
-          position: 'fixed',
-          top: 16,
-          right: 'max(16px, calc((100vw - 1206px) / 2))',
-          zIndex: 101,
-          width: 80,
-          height: 80,
-          ...glass,
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 5.5,
-          padding: 0,
-        }}
-      >
-        {[line1Ref, line2Ref, line3Ref].map((ref, i) => (
+      <div style={{
+        position: 'fixed',
+        top: 16,
+        right: 16,
+        zIndex: 100,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        width: 'calc(100% - 32px)',
+        maxWidth: 1206,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        pointerEvents: 'none',
+      }}>
+        <div
+          id="tl-nav-pill"
+          className={open ? 'nav-open' : ''}
+          style={{
+            ...glass,
+            height: 80,
+            width: open ? '100%' : 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 20px',
+            overflow: 'hidden',
+            position: 'relative',
+            pointerEvents: 'auto',
+            boxSizing: 'border-box',
+            cursor: open ? 'default' : 'pointer',
+          }}
+          onClick={!open ? toggle : undefined}
+        >
+          {/* Logo — absolute left */}
           <div
-            key={i}
-            ref={ref}
+            className="nav-logo"
             style={{
-              width: 22,
-              height: 2.5,
-              borderRadius: 2,
-              background: '#152238',
-              transformOrigin: 'center',
-              flexShrink: 0,
+              position: 'absolute',
+              left: 20,
+              display: 'flex',
+              alignItems: 'center',
             }}
-          />
-        ))}
-      </button>
+          >
+            <img src="/logo.svg" alt="TravelLocal" style={{ height: 46, width: 'auto', display: 'block' }} />
+          </div>
+
+          {/* Links — absolute centre */}
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 40,
+          }}>
+            {LINKS.map(link => (
+              <a key={link} href="#" className="nav-link">{link}</a>
+            ))}
+          </div>
+
+          {/* Right — icons + hamburger — absolute right */}
+          <div style={{
+            position: 'absolute',
+            right: 20,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+          }}>
+            {/* Search + Globe */}
+            <div className="nav-icons" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', color: 'rgba(255,255,255,0.85)' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', color: 'rgba(255,255,255,0.85)' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Hamburger / X */}
+            <button
+              ref={burgerRef}
+              onClick={toggle}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5.5,
+                padding: 6,
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+              }}
+              aria-label={open ? 'Close menu' : 'Open menu'}
+            >
+              <div className={`h-line h-line-1 ${open ? 'nav-open' : ''}`} style={{ transform: open ? 'rotate(45deg) translateY(7px)' : 'none' }}/>
+              <div className={`h-line h-line-2 ${open ? 'nav-open' : ''}`} style={{ opacity: open ? 0 : 1, transform: open ? 'scaleX(0)' : 'none' }}/>
+              <div className={`h-line h-line-3 ${open ? 'nav-open' : ''}`} style={{ transform: open ? 'rotate(-45deg) translateY(-7px)' : 'none' }}/>
+            </button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
