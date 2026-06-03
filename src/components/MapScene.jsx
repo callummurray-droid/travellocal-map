@@ -313,7 +313,9 @@ export default function MapScene({ visible }) {
 
         // Expand cursor over countries
         const cur = cursorRef.current;
+        const arr = document.getElementById('map-cursor-arrow');
         if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
+        if (arr) arr.style.opacity = '1';
       });
 
       map.on('mouseleave', 'country-fills', () => {
@@ -324,7 +326,9 @@ export default function MapScene({ visible }) {
         map.getCanvas().style.cursor = '';
         // Shrink cursor back
         const cur = cursorRef.current;
+        const arr = document.getElementById('map-cursor-arrow');
         if (cur) { cur.style.width = '12px'; cur.style.height = '12px'; }
+        if (arr) arr.style.opacity = '0';
         // Delay hiding popup so user can move onto it
         hideTimerRef.current = setTimeout(() => {
           if (!popupHovered.current) setHoveredCountry(null);
@@ -442,13 +446,17 @@ export default function MapScene({ visible }) {
             clearTimeout(hideTimerRef.current);
             // Expand cursor when over popup
             const cur = cursorRef.current;
+            const arr = document.getElementById('map-cursor-arrow');
             if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
+            if (arr) arr.style.opacity = '1';
           }}
           onMouseLeave={() => {
             popupHovered.current = false;
             setHoveredCountry(null);
             const cur = cursorRef.current;
+            const arr = document.getElementById('map-cursor-arrow');
             if (cur) { cur.style.width = '12px'; cur.style.height = '12px'; }
+            if (arr) arr.style.opacity = '0';
           }}
         />
       )}
@@ -532,7 +540,7 @@ export default function MapScene({ visible }) {
         onClose={closePanel}
       />
 
-      {/* Custom teal cursor */}
+      {/* Custom teal cursor with arrow on expand */}
       <div
         ref={cursorRef}
         style={{
@@ -546,8 +554,23 @@ export default function MapScene({ visible }) {
           zIndex: 99999,
           transition: 'width 0.3s cubic-bezier(0.34,1.56,0.64,1), height 0.3s cubic-bezier(0.34,1.56,0.64,1)',
           left: -100, top: -100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
         }}
-      />
+      >
+        <svg
+          id="map-cursor-arrow"
+          width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="white" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            opacity: 0, flexShrink: 0,
+            transition: 'opacity 0.2s ease 0.1s',
+          }}
+        >
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
     </div>
   );
 }

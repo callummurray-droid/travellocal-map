@@ -7,9 +7,10 @@ export default function CountryPopup({ country, x, y, config, onExplore, onMouse
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  let left = x + 20;
+  // Offset popup from cursor: 30px (half of 60px expanded cursor) + 12px gap = 42px
+  let left = x + 42;
   let top  = y - H / 2;
-  if (left + W > vw - PAD) left = x - W - 20;
+  if (left + W > vw - PAD) left = x - W - 42;
   if (top < PAD) top = PAD;
   if (top + H > vh - PAD) top = vh - H - PAD;
 
