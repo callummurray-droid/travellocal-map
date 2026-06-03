@@ -197,6 +197,7 @@ export default function MapScene({ visible }) {
   const [activePOI, setActivePOI]   = useState(null);
   const audioRef      = useRef(null);
   const audioFadeRef  = useRef(null);
+  const selectedFeatureIdRef = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -839,6 +840,20 @@ export default function MapScene({ visible }) {
 
   const selectCountry = (name, featureId) => {
     const config = ALL_CONFIG[name];
+
+    // Clear previous selected feature state first
+    if (mapRef.current && selectedFeatureIdRef.current != null) {
+      try {
+        mapRef.current.setFeatureState(
+          { source: 'countries', sourceLayer: 'country_boundaries', id: selectedFeatureIdRef.current },
+          { selected: false }
+        );
+      } catch(e) {}
+    }
+    // Clear POI pins from previous country
+    clearPOIs();
+
+    selectedFeatureIdRef.current = featureId;
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
     playCountryAudio(name);
@@ -846,13 +861,11 @@ export default function MapScene({ visible }) {
     // Fly to country
     const fly = COUNTRY_FLY[name] || COUNTRY_FLY.default;
     if (mapRef.current) {
-      // Get fly centre from config coordinates if not in COUNTRY_FLY
       let center = fly.center;
       if (!center && config?.coordinates) {
         const [lat, lng] = config.coordinates.replace(/[°NSEW]/g, '').split(',').map(Number);
         center = [lng || 0, lat || 0];
       }
-      // Add POI pins after fly animation completes
       if (center) {
         mapRef.current.flyTo({ center, zoom: fly.zoom || 5, duration: 1400, essential: true });
         setTimeout(() => addPOIs(name), 1600);
@@ -861,14 +874,13 @@ export default function MapScene({ visible }) {
       }
     }
 
-    // Set selected feature state
+    // Set new feature state
     if (mapRef.current && featureId != null) {
       mapRef.current.setFeatureState(
         { source: 'countries', sourceLayer: 'country_boundaries', id: featureId },
         { selected: true, hovered: false }
       );
       const col = config?.colour || '#2ab5a0';
-      // Use country's own colour for the subtle tint + border
       mapRef.current.setPaintProperty('country-fills', 'fill-color', [
         'case',
         ['boolean', ['feature-state', 'selected'], false], col,
@@ -888,11 +900,15 @@ export default function MapScene({ visible }) {
     setPanelOpen(false);
     clearPOIs();
     stopAudio();
-    if (mapRef.current && selectedCountry?.featureId != null) {
-      mapRef.current.setFeatureState(
-        { source: 'countries', sourceLayer: 'country_boundaries', id: selectedCountry.featureId },
-        { selected: false }
-      );
+    // Use ref for reliable feature state clearing (not stale state)
+    if (mapRef.current && selectedFeatureIdRef.current != null) {
+      try {
+        mapRef.current.setFeatureState(
+          { source: 'countries', sourceLayer: 'country_boundaries', id: selectedFeatureIdRef.current },
+          { selected: false }
+        );
+      } catch(e) {}
+      selectedFeatureIdRef.current = null;
     }
     setSelectedCountry(null);
   };
