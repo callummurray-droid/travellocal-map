@@ -239,7 +239,7 @@ export default function HeroScene({ onExplore }) {
         id="marquee-wrap"
         style={{
           position: 'absolute', inset: 0, overflow: 'hidden',
-          zIndex: 3, opacity: 0, pointerEvents: 'none',
+          zIndex: 3, opacity: 0, pointerEvents: 'auto',
           display: 'flex', alignItems: 'center',
         }}
       >
@@ -258,6 +258,38 @@ export default function HeroScene({ onExplore }) {
                 transform: `translateY(${Y_OFFSETS[i % Y_OFFSETS.length]}px)`,
                 borderRadius: 18, overflow: 'hidden',
                 boxShadow: `0 8px 32px ${card.shadow}`,
+                transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), filter 0.3s ease',
+                cursor: 'none',
+              }}
+              onMouseEnter={(e) => {
+                // Pause marquee
+                if (tweenRef.current) tweenRef.current.pause();
+                // Lift hovered card
+                e.currentTarget.style.transform = `translateY(${Y_OFFSETS[i % Y_OFFSETS.length] - 8}px) scale(1.04)`;
+                e.currentTarget.style.boxShadow = `0 24px 60px ${card.shadow}`;
+                e.currentTarget.style.zIndex = '10';
+                // Dim all sibling cards
+                const siblings = e.currentTarget.parentElement.children;
+                Array.from(siblings).forEach((el, j) => {
+                  if (el !== e.currentTarget) el.style.filter = 'brightness(0.5)';
+                });
+                // Also lift marquee opacity to full on hover
+                const wrap = document.getElementById('marquee-wrap');
+                if (wrap) wrap.style.opacity = '0.85';
+              }}
+              onMouseLeave={(e) => {
+                // Resume marquee
+                if (tweenRef.current) tweenRef.current.play();
+                // Reset hovered card
+                e.currentTarget.style.transform = `translateY(${Y_OFFSETS[i % Y_OFFSETS.length]}px) scale(1)`;
+                e.currentTarget.style.boxShadow = `0 8px 32px ${card.shadow}`;
+                e.currentTarget.style.zIndex = '';
+                // Restore siblings
+                const siblings = e.currentTarget.parentElement.children;
+                Array.from(siblings).forEach(el => { el.style.filter = ''; });
+                // Return marquee to 50% opacity
+                const wrap = document.getElementById('marquee-wrap');
+                if (wrap) wrap.style.opacity = '0.5';
               }}
             >
               <img
@@ -342,8 +374,10 @@ export default function HeroScene({ onExplore }) {
             }
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <path d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"/>
+            <path d="M19 14l0.8 2.7L22 17.5l-2.2.8L19 21l-.8-2.7L16 17.5l2.2-.8L19 14z"/>
+            <path d="M5 2l.6 1.9L7.5 4.5 5.6 5.1 5 7l-.6-1.9L2.5 4.5l1.9-.6L5 2z"/>
           </svg>
           Let's explore the world together
         </button>
@@ -373,9 +407,8 @@ export default function HeroScene({ onExplore }) {
       >
         <svg
           id="cursor-arrow"
-          width="18" height="18" viewBox="0 0 24 24"
-          fill="none" stroke="white" strokeWidth="2.5"
-          strokeLinecap="round" strokeLinejoin="round"
+          width="22" height="22" viewBox="0 0 24 24"
+          fill="white" stroke="none"
           style={{
             opacity: 0,
             transform: 'scale(0.5)',
@@ -383,7 +416,9 @@ export default function HeroScene({ onExplore }) {
             flexShrink: 0,
           }}
         >
-          <path d="M5 12h14M12 5l7 7-7 7"/>
+          <path d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"/>
+          <path d="M19 14l0.8 2.7L22 17.5l-2.2.8L19 21l-.8-2.7L16 17.5l2.2-.8L19 14z"/>
+          <path d="M5 2l.6 1.9L7.5 4.5 5.6 5.1 5 7l-.6-1.9L2.5 4.5l1.9-.6L5 2z"/>
         </svg>
       </div>
 
