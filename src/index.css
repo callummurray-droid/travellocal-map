@@ -188,3 +188,7 @@ body {
 .pin-ring {
   animation: pin-pulse 2.5s ease-out infinite;
 }
+
+#cta-btn {
+  cursor: none !important;
+}

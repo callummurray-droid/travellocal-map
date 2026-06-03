@@ -287,22 +287,30 @@ export default function HeroScene({ onExplore }) {
           onClick={handleExplore}
           onMouseEnter={() => {
             const cur = document.getElementById('custom-cursor');
+            const arr = document.getElementById('cursor-arrow');
             if (cur) {
               cur.style.width = '80px';
               cur.style.height = '80px';
-              cur.style.background = '#2ab5a0';
               cur.style.boxShadow = '0 0 40px 16px rgba(42,181,160,0.4), 0 0 0 1px rgba(42,181,160,0.6)';
               cur.style.opacity = '0.85';
+            }
+            if (arr) {
+              arr.style.opacity = '1';
+              arr.style.transform = 'scale(1)';
             }
           }}
           onMouseLeave={() => {
             const cur = document.getElementById('custom-cursor');
+            const arr = document.getElementById('cursor-arrow');
             if (cur) {
               cur.style.width = '12px';
               cur.style.height = '12px';
-              cur.style.background = '#2ab5a0';
               cur.style.boxShadow = '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)';
               cur.style.opacity = '1';
+            }
+            if (arr) {
+              arr.style.opacity = '0';
+              arr.style.transform = 'scale(0.5)';
             }
           }}
         >
@@ -329,8 +337,27 @@ export default function HeroScene({ onExplore }) {
           zIndex: 99999,
           transition: 'width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, opacity 0.35s ease',
           mixBlendMode: 'normal',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
         }}
-      />
+      >
+        <svg
+          id="cursor-arrow"
+          width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="white" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            opacity: 0,
+            transform: 'scale(0.5)',
+            transition: 'opacity 0.2s ease 0.1s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1) 0.1s',
+            flexShrink: 0,
+          }}
+        >
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
 
       {/* Hint text — fades after mouse moves */}
       {!entered && (
