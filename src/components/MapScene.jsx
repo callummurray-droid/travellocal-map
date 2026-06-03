@@ -283,7 +283,10 @@ export default function MapScene({ visible }) {
         hoveredIdRef.current = e.features[0].id;
         map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredIdRef.current }, { hovered: true });
         map.getCanvas().style.cursor = 'pointer';
-        setHoveredCountry({ name, lngLat: e.lngLat });
+
+        // Convert lng/lat to screen pixel position for popup anchoring
+        const point = map.project(e.lngLat);
+        setHoveredCountry({ name, x: point.x, y: point.y });
       });
 
       map.on('mouseleave', 'country-fills', () => {
@@ -376,38 +379,86 @@ export default function MapScene({ visible }) {
       {/* Map */}
       <div ref={mapContainer} className="absolute inset-0" />
 
-      {/* Hover popup */}
-      {hoveredCountry && !panelOpen && (
-        <div
-          className="country-popup absolute pointer-events-none z-30"
-          style={{
-            left: '50%', top: '50%',
-            transform: 'translate(-50%,-50%)',
-            width: 200,
-          }}
-        >
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <p className="font-body text-white/50 text-xs mb-1">
-              <svg style={{ display: 'inline', marginRight: 4 }} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {hoveredCountry.name}
-            </p>
-            <div style={{ width: '100%', height: 90, background: '#1e3a6e', borderRadius: 8, overflow: 'hidden' }}>
-              {COUNTRY_CONFIG[hoveredCountry.name]?.images?.[0] && (
-                <img src={COUNTRY_CONFIG[hoveredCountry.name].images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-              )}
-            </div>
-          </div>
-          <button
-            className="w-full font-body text-white text-sm font-semibold py-3 px-4 text-left hover:bg-white/5 transition-colors pointer-events-auto"
-            onClick={() => {
-              const cfg = COUNTRY_CONFIG[hoveredCountry.name];
-              if (cfg) selectCountry(hoveredCountry.name, null);
+      {/* Hover popup — anchored to mouse position, styled like Figma */}
+      {hoveredCountry && !panelOpen && (() => {
+        const config = COUNTRY_CONFIG[hoveredCountry.name];
+        const POPUP_W = 200;
+        const POPUP_H = 200;
+        const PAD = 16;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Position popup offset from cursor, flip if too close to edge
+        let left = hoveredCountry.x + 16;
+        let top  = hoveredCountry.y - POPUP_H / 2;
+        if (left + POPUP_W > vw - PAD) left = hoveredCountry.x - POPUP_W - 16;
+        if (top < PAD) top = PAD;
+        if (top + POPUP_H > vh - PAD) top = vh - POPUP_H - PAD;
+
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              left, top,
+              width: POPUP_W,
+              zIndex: 30,
+              pointerEvents: 'none',
+              animation: 'popupIn 0.18s cubic-bezier(0.34,1.56,0.64,1)',
             }}
           >
-            Explore {hoveredCountry.name} →
-          </button>
-        </div>
-      )}
+            {/* Card — dark navy, rounded, matching Figma */}
+            <div style={{
+              background: 'rgba(13, 24, 41, 0.96)',
+              border: `1.5px solid ${config?.borderColour || 'rgba(255,255,255,0.12)'}`,
+              borderRadius: 14,
+              overflow: 'hidden',
+              boxShadow: `0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px ${config?.borderColour || 'transparent'}22`,
+            }}>
+              {/* Country name header */}
+              <div style={{
+                padding: '8px 12px 6px',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={config?.borderColour || '#2ab5a0'} strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span style={{
+                  fontFamily: 'Mulish, sans-serif', fontSize: 12, fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)', letterSpacing: '0.02em',
+                }}>
+                  {hoveredCountry.name}
+                </span>
+              </div>
+
+              {/* Image */}
+              <div style={{ width: '100%', height: 110, overflow: 'hidden' }}>
+                {config?.images?.[0]
+                  ? <img src={config.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
+                  : <div style={{ width: '100%', height: '100%', background: '#1e3a6e' }}/>
+                }
+              </div>
+
+              {/* Explore button */}
+              <button
+                style={{
+                  display: 'block', width: '100%',
+                  padding: '10px 12px',
+                  fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700,
+                  color: 'white', textAlign: 'left',
+                  background: 'none', border: 'none',
+                  borderTop: '1px solid rgba(255,255,255,0.07)',
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  letterSpacing: '0.01em',
+                }}
+                onClick={() => config && selectCountry(hoveredCountry.name, null)}
+              >
+                Explore {hoveredCountry.name} →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Bottom search bar */}
       <div className="absolute bottom-8 left-8 z-20" style={{ minWidth: 260 }}>
