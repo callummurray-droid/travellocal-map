@@ -426,12 +426,21 @@ export default function MapScene({ visible }) {
         }, 120);
       });
 
-      // Click interaction
+      // Click on country — select it
       map.on('click', 'country-fills', (e) => {
         const raw = e.features[0]?.properties?.name_en;
         const name = resolveCountryName(raw);
         if (!name) return;
         selectCountry(name, e.features[0].id);
+      });
+
+      // Click on bare map (no feature) — close panel
+      map.on('click', (e) => {
+        if (!e.features?.length && !is3DRef.current) {
+          // Only close if clicking empty map area, not a feature
+          const features = map.queryRenderedFeatures(e.point, { layers: ['country-fills', 'expert-pins-dot'] });
+          if (!features.length) closePanel();
+        }
       });
 
       // Nav fade in
@@ -716,6 +725,12 @@ export default function MapScene({ visible }) {
         const name = resolveCountryName(raw);
         if (!name) return;
         selectCountry(name, e.features[0].id);
+      });
+      map.on('click', (e) => {
+        if (!is3DRef.current) {
+          const features = map.queryRenderedFeatures(e.point, { layers: ['country-fills', 'expert-pins-dot'] });
+          if (!features.length) closePanel();
+        }
       });
       map.on('mouseenter', 'expert-pins-dot', () => {
         map.getCanvas().style.cursor = 'pointer';
@@ -1150,17 +1165,16 @@ export default function MapScene({ visible }) {
         </div>
       </div>
 
-      {/* Panel overlay — only covers map area, not the panel itself */}
+      {/* Panel overlay — subtle dim only, no pointer blocking */}
       {panelOpen && (
         <div
           style={{
             position: 'absolute', inset: 0,
-            right: 560, // leave panel width clear
-            zIndex: 30,
-            background: 'rgba(0,0,0,0.25)',
-            pointerEvents: 'auto',
+            right: 560,
+            zIndex: 28,
+            background: 'rgba(0,0,0,0.2)',
+            pointerEvents: 'none', // never block clicks — POI pins must be clickable
           }}
-          onClick={closePanel}
         />
       )}
 
