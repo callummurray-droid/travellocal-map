@@ -33,7 +33,7 @@ const POI_CONTENT = {
     ],
     imageLabels: ['Colosseum, Rome', 'Roman Forum'],
     expert: { name: 'Marco', role: 'Rome & Lazio expert', img: '/experts/expert1.png' },
-    quote: '"The Colosseum looks incredible in photos but nothing prepares you for standing in front of it at golden hour. I\'ll take you underground through the hypogeum — where gladiators waited — and then up to the top tier where the view over Rome is simply breathtaking."',
+    quote: '"The Colosseum looks incredible in photos but nothing prepares you for standing in front of it at golden hour. I'll take you underground through the hypogeum — where gladiators waited — and then up to the top tier where the view over Rome is simply breathtaking."',
     trips: [
       {
         title: 'Rome in depth — 5 days with a local', days: 5, price: '£1,800',
@@ -63,7 +63,7 @@ const POI_CONTENT = {
     subtitle: 'The Cradle of the Renaissance',
     region: 'Tuscany, Italy',
     coordinates: '43.7696° N, 11.2558° E',
-    description: 'Michelangelo\'s David. Botticelli\'s Birth of Venus. Brunelleschi\'s dome rising above terracotta rooftops. Florence holds more Renaissance masterpieces per square metre than anywhere on earth — and the bistecca is extraordinary.',
+    description: 'Michelangelo's David. Botticelli's Birth of Venus. Brunelleschi's dome rising above terracotta rooftops. Florence holds more Renaissance masterpieces per square metre than anywhere on earth — and the bistecca is extraordinary.',
     bestTime: [
       { label: 'Ideal', value: 'April – May and September – October' },
       { label: 'Summer', value: 'Busy but beautiful — book everything ahead' },
@@ -81,7 +81,7 @@ const POI_CONTENT = {
     ],
     imageLabels: ['Florence, Tuscany', 'Tuscan countryside'],
     expert: { name: 'Sofia', role: 'Tuscany expert', img: '/experts/expert3.png' },
-    quote: '"Most visitors spend two days in Florence and leave thinking they\'ve seen it. I like to slow things right down — a morning with the Uffizi curator, lunch in the Oltrarno where the artisans still work, and an evening on a hilltop farm with a glass of Chianti."',
+    quote: '"Most visitors spend two days in Florence and leave thinking they've seen it. I like to slow things right down — a morning with the Uffizi curator, lunch in the Oltrarno where the artisans still work, and an evening on a hilltop farm with a glass of Chianti."',
     trips: [
       { title: 'Florence & the Tuscan countryside', days: 6, price: '£2,200', img: 'https://images.unsplash.com/photo-1543429257-3eb0b9bfdbf0?w=400&q=80' },
       { title: 'Renaissance art deep dive', days: 4, price: '£1,600', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80' },
@@ -92,7 +92,7 @@ const POI_CONTENT = {
     subtitle: 'The Floating City',
     region: 'Veneto, Italy',
     coordinates: '45.4408° N, 12.3155° E',
-    description: 'Built on 118 islands, connected by 400 bridges, with no roads — Venice is the most improbable city ever constructed. Away from St Mark\'s Square, it\'s a labyrinth of quiet canals, neighbourhood bakeries and locals who\'ve lived here for generations.',
+    description: 'Built on 118 islands, connected by 400 bridges, with no roads — Venice is the most improbable city ever constructed. Away from St Mark's Square, it's a labyrinth of quiet canals, neighbourhood bakeries and locals who've lived here for generations.',
     bestTime: [
       { label: 'Best', value: 'October – November, February – March' },
       { label: 'Carnival', value: 'February — spectacular but very busy' },
@@ -110,7 +110,7 @@ const POI_CONTENT = {
     ],
     imageLabels: ['Grand Canal, Venice'],
     expert: { name: 'Marco', role: 'Rome & Lazio expert', img: '/experts/expert1.png' },
-    quote: '"Everyone comes to Venice and walks straight to the Rialto. I take people through the back streets of Cannaregio before the city wakes up — just locals, cats, and the smell of fresh bread. That\'s the Venice I fell in love with."',
+    quote: '"Everyone comes to Venice and walks straight to the Rialto. I take people through the back streets of Cannaregio before the city wakes up — just locals, cats, and the smell of fresh bread. That's the Venice I fell in love with."',
     trips: [
       { title: 'Venice beyond the tourist trail', days: 4, price: '£1,900', img: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400&q=80' },
       { title: 'Venice, Verona & the Veneto', days: 7, price: '£2,600', img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400&q=80' },
@@ -121,7 +121,7 @@ const POI_CONTENT = {
     subtitle: 'Where Mountains Meet the Sea',
     region: 'Campania, Italy',
     coordinates: '40.6340° N, 14.6026° E',
-    description: 'Vertical cliffs tumbling into turquoise water, lemon groves scenting the air, coloured villages clinging to rock faces — the Amalfi Coast is one of the world\'s great drives and an even better slow walk.',
+    description: 'Vertical cliffs tumbling into turquoise water, lemon groves scenting the air, coloured villages clinging to rock faces — the Amalfi Coast is one of the world's great drives and an even better slow walk.',
     bestTime: [
       { label: 'Sweet spot', value: 'May – June and September – October' },
       { label: 'Lemon season', value: 'May — groves in full bloom' },
@@ -138,7 +138,7 @@ const POI_CONTENT = {
     ],
     imageLabels: ['Amalfi Coast, Campania'],
     expert: { name: 'Isabelle', role: 'Amalfi & Sicily expert', img: '/experts/expert4.png' },
-    quote: '"The coast road gets all the attention but the real magic is on foot. The Path of the Gods above Positano — you\'re looking down at the sea with nothing but terraced lemon groves around you. I\'ve done it dozens of times and it still takes my breath away."',
+    quote: '"The coast road gets all the attention but the real magic is on foot. The Path of the Gods above Positano — you're looking down at the sea with nothing but terraced lemon groves around you. I've done it dozens of times and it still takes my breath away."',
     trips: [
       { title: 'Amalfi, Positano & Capri', days: 6, price: '£2,800', img: 'https://images.unsplash.com/photo-1534445867742-43195f401b6c?w=400&q=80' },
       { title: 'Southern Italy: Naples to Amalfi', days: 8, price: '£3,000', img: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400&q=80' },
@@ -160,14 +160,14 @@ const POI_CONTENT = {
       'Tre Cime di Lavaredo sunrise hike',
       'Alta Via 1 — multi-day hut-to-hut trail',
       'Rifugio Lagazuoi — lunch at 2,752m',
-      'Alpe di Siusi — Europe\'s largest alpine meadow',
+      'Alpe di Siusi — Europe's largest alpine meadow',
     ],
     images: [
       'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800&q=80',
     ],
     imageLabels: ['Seceda, Dolomites'],
     expert: { name: 'Luca', role: 'Dolomites expert', img: '/experts/expert2.png' },
-    quote: '"People think the Dolomites are just for serious mountaineers. I take families, couples, solo travellers — everyone finds their level here. There\'s a hike for every ability and a rifugio at the top of each one serving the best Kaiserschmarrn you\'ve ever tasted."',
+    quote: '"People think the Dolomites are just for serious mountaineers. I take families, couples, solo travellers — everyone finds their level here. There's a hike for every ability and a rifugio at the top of each one serving the best Kaiserschmarrn you've ever tasted."',
     trips: [
       { title: 'Dolomites hut-to-hut — 7 days', days: 7, price: '£2,800', img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=400&q=80' },
       { title: 'Dolomites highlights — 4 days', days: 4, price: '£1,600', img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=400&q=80' },
