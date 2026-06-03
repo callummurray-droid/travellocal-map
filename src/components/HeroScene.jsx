@@ -2,150 +2,73 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
 const ALL_CARDS = [
-  { src: '/cards/morocco.png',   shadow: 'rgba(61,90,128,0.6)'   },
-  { src: '/cards/india.png',     shadow: 'rgba(139,115,85,0.6)'  },
-  { src: '/cards/indonesia.png', shadow: 'rgba(184,149,106,0.6)' },
-  { src: '/cards/portugal.png',  shadow: 'rgba(196,97,58,0.6)'   },
-  { src: '/cards/greece.png',    shadow: 'rgba(196,97,58,0.6)'   },
-  { src: '/cards/costarica.png', shadow: 'rgba(232,160,32,0.6)'  },
-  { src: '/cards/peru.png',      shadow: 'rgba(61,90,128,0.6)'   },
-  { src: '/cards/italy.png',     shadow: 'rgba(196,97,58,0.6)'   },
-  { src: '/cards/australia.png', shadow: 'rgba(196,97,58,0.6)'   },
-  { src: '/cards/germany.png',   shadow: 'rgba(232,160,32,0.6)'  },
-  { src: '/cards/egypt.png',     shadow: 'rgba(61,90,128,0.6)'   },
-  { src: '/cards/scotland.png',  shadow: 'rgba(184,149,106,0.6)' },
-  { src: '/cards/thailand.png',  shadow: 'rgba(196,97,58,0.6)'   },
-  { src: '/cards/laos.png',      shadow: 'rgba(196,97,58,0.6)'   },
+  { src: '/cards/morocco.png',   shadow: 'rgba(61,90,128,0.5)'   },
+  { src: '/cards/india.png',     shadow: 'rgba(139,115,85,0.5)'  },
+  { src: '/cards/indonesia.png', shadow: 'rgba(184,149,106,0.5)' },
+  { src: '/cards/portugal.png',  shadow: 'rgba(196,97,58,0.5)'   },
+  { src: '/cards/greece.png',    shadow: 'rgba(196,97,58,0.5)'   },
+  { src: '/cards/costarica.png', shadow: 'rgba(232,160,32,0.5)'  },
+  { src: '/cards/peru.png',      shadow: 'rgba(61,90,128,0.5)'   },
+  { src: '/cards/italy.png',     shadow: 'rgba(196,97,58,0.5)'   },
+  { src: '/cards/australia.png', shadow: 'rgba(196,97,58,0.5)'   },
+  { src: '/cards/germany.png',   shadow: 'rgba(232,160,32,0.5)'  },
+  { src: '/cards/egypt.png',     shadow: 'rgba(61,90,128,0.5)'   },
+  { src: '/cards/scotland.png',  shadow: 'rgba(184,149,106,0.5)' },
+  { src: '/cards/thailand.png',  shadow: 'rgba(196,97,58,0.5)'   },
+  { src: '/cards/laos.png',      shadow: 'rgba(196,97,58,0.5)'   },
 ];
 
-// Each row has cards with individual vertical offsets to break the straight line
-// offsets are applied per-card within the row to create the scattered feel
-const ROWS = [
-  {
-    id: 0,
-    cards: [0, 4, 8, 12, 2, 6, 10],
-    baseTop: 80,      // px from top
-    speed: 40,
-    direction: 1,
-    cardW: 170,
-    cardH: 210,
-    // Per-card y offset within this row — creates the scattered look
-    offsets: [0, -30, 20, -15, 25, -20, 10],
-  },
-  {
-    id: 1,
-    cards: [3, 7, 11, 1, 5, 9, 13],
-    baseTop: 280,
-    speed: 55,
-    direction: -1,
-    cardW: 180,
-    cardH: 220,
-    offsets: [20, -25, 10, -30, 15, -10, 25],
-  },
-  {
-    id: 2,
-    cards: [1, 5, 9, 13, 3, 7, 11],
-    baseTop: 490,
-    speed: 38,
-    direction: 1,
-    cardW: 165,
-    cardH: 205,
-    offsets: [-20, 25, -10, 20, -25, 15, -5],
-  },
-  {
-    id: 3,
-    cards: [2, 6, 10, 0, 4, 8, 12],
-    baseTop: 680,
-    speed: 48,
-    direction: -1,
-    cardW: 175,
-    cardH: 215,
-    offsets: [15, -20, 30, -10, 20, -25, 5],
-  },
+// Single row — large gaps, dramatic vertical offsets per card
+// Heights reference: viewport centre = 0, negative = up, positive = down
+const CARD_W = 175;
+const CARD_H = 215;
+const GAP = 80; // big breathing room between cards
+
+// Vertical offset for each card — large range to create the scattered floating look
+const Y_OFFSETS = [
+  -180,  // card 0 — high up
+   120,  // card 1 — low
+  -80,   // card 2 — mid up
+   200,  // card 3 — very low
+  -220,  // card 4 — very high
+   60,   // card 5 — slightly low
+  -140,  // card 6 — high
+   180,  // card 7 — low
+  -60,   // card 8 — slightly high
+   240,  // card 9 — very low
+  -200,  // card 10 — very high
+   100,  // card 11 — mid low
+  -100,  // card 12 — mid high
+   160,  // card 13 — low
 ];
 
-function MarqueeRow({ row }) {
-  const rowRef = useRef(null);
+export default function HeroScene({ onExplore }) {
+  const sceneRef  = useRef(null);
+  const stripRef  = useRef(null);
 
   useEffect(() => {
-    const el = rowRef.current;
+    const el = stripRef.current;
     if (!el) return;
-    const gap = 24;
-    const totalW = (row.cardW + gap) * row.cards.length;
-    const startX = row.direction === 1 ? 0 : -totalW;
-    gsap.set(el, { x: startX });
+
+    const totalW = (CARD_W + GAP) * ALL_CARDS.length;
+
+    gsap.set(el, { x: 0 });
 
     const tween = gsap.to(el, {
-      x: row.direction === 1 ? -totalW : 0,
-      duration: row.speed,
+      x: -totalW,
+      duration: 60,
       ease: 'none',
       repeat: -1,
       modifiers: {
         x: gsap.utils.unitize(x => {
           const v = parseFloat(x);
-          if (row.direction === 1) return v <= -totalW ? v + totalW : v;
-          return v >= 0 ? v - totalW : v;
+          return v <= -totalW ? v + totalW : v;
         }),
       },
     });
 
     return () => tween.kill();
   }, []);
-
-  // Triple the cards so the loop is always seamless
-  const display = [...row.cards, ...row.cards, ...row.cards];
-
-  return (
-    <div
-      ref={rowRef}
-      style={{
-        display: 'flex',
-        gap: 24,
-        alignItems: 'flex-start',
-        willChange: 'transform',
-        width: 'max-content',
-        position: 'absolute',
-        top: row.baseTop,
-        left: 0,
-      }}
-    >
-      {display.map((cardIdx, i) => {
-        const card = ALL_CARDS[cardIdx];
-        const offset = row.offsets[i % row.offsets.length];
-        return (
-          <div
-            key={i}
-            style={{
-              width: row.cardW,
-              height: row.cardH,
-              flexShrink: 0,
-              transform: `translateY(${offset}px)`,
-              borderRadius: 18,
-              overflow: 'hidden',
-              boxShadow: `0 8px 32px ${card.shadow}`,
-            }}
-          >
-            <img
-              src={card.src}
-              alt=""
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function HeroScene({ onExplore }) {
-  const sceneRef = useRef(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -182,15 +105,17 @@ export default function HeroScene({ onExplore }) {
 
   const words = ['Explore','the','world','through','the','eyes','of','someone','who','lives','there'];
 
+  // Duplicate for seamless loop
+  const displayCards = [...ALL_CARDS, ...ALL_CARDS];
+
   return (
     <div ref={sceneRef} className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden select-none">
 
-      {/* Background */}
       <div className="absolute inset-0" style={{
         background: 'linear-gradient(180deg, #1c3260 0%, #162a50 30%, #101f3c 65%, #0d1829 100%)'
       }}/>
 
-      {/* Marquee layer — absolute positioned rows at different heights */}
+      {/* Single marquee strip — centred vertically, cards float up/down from centre */}
       <div
         id="marquee-wrap"
         style={{
@@ -200,15 +125,58 @@ export default function HeroScene({ onExplore }) {
           zIndex: 1,
           opacity: 0,
           pointerEvents: 'none',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
-        {ROWS.map(row => <MarqueeRow key={row.id} row={row} />)}
+        <div
+          ref={stripRef}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: GAP,
+            willChange: 'transform',
+            width: 'max-content',
+          }}
+        >
+          {displayCards.map((card, i) => {
+            const offset = Y_OFFSETS[i % Y_OFFSETS.length];
+            return (
+              <div
+                key={i}
+                style={{
+                  width: CARD_W,
+                  height: CARD_H,
+                  flexShrink: 0,
+                  transform: `translateY(${offset}px)`,
+                  borderRadius: 18,
+                  overflow: 'hidden',
+                  boxShadow: `0 8px 32px ${card.shadow}`,
+                }}
+              >
+                <img
+                  src={card.src}
+                  alt=""
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                    draggable: false,
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Radial vignette — darkens centre so headline is readable */}
+      {/* Vignette — strong centre darkness so headline reads clearly */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse 55% 50% at 50% 50%, rgba(13,24,41,0.82) 0%, rgba(13,24,41,0.4) 60%, transparent 100%)',
+        background: 'radial-gradient(ellipse 50% 45% at 50% 50%, rgba(13,24,41,0.88) 0%, rgba(13,24,41,0.5) 55%, transparent 100%)',
       }}/>
 
       {/* Centre content */}
