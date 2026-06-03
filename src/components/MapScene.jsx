@@ -95,6 +95,7 @@ export default function MapScene({ visible }) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const pulseRafRef = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -241,12 +242,33 @@ export default function MapScene({ visible }) {
         ]);
       });
 
-      // Fade pins in after map loads
+      // Fade pins in after map loads, then start pulse loop
       setTimeout(() => {
         map.setPaintProperty('expert-pins-dot',  'circle-opacity', 1);
         map.setPaintProperty('expert-pins-dot',  'circle-stroke-opacity', 1);
-        map.setPaintProperty('expert-pins-ring', 'circle-opacity', 0);
-        map.setPaintProperty('expert-pins-ring', 'circle-stroke-opacity', 0.45);
+        map.setPaintProperty('expert-pins-ring', 'circle-stroke-opacity', 0);
+
+        // RAF pulse loop — animates ring radius and opacity
+        let startTime = null;
+        const PULSE_DURATION = 2000; // ms per cycle
+
+        function pulse(ts) {
+          if (!startTime) startTime = ts;
+          const t = ((ts - startTime) % PULSE_DURATION) / PULSE_DURATION; // 0→1 repeating
+
+          // Ring grows from 5 → 18px and fades from 0.7 → 0
+          const radius  = 5 + t * 13;
+          const opacity = 0.7 * (1 - t);
+
+          try {
+            map.setPaintProperty('expert-pins-ring', 'circle-radius', radius);
+            map.setPaintProperty('expert-pins-ring', 'circle-stroke-opacity', opacity);
+          } catch(e) {}
+
+          pulseRafRef.current = requestAnimationFrame(pulse);
+        }
+
+        pulseRafRef.current = requestAnimationFrame(pulse);
       }, 600);
 
       // Hover interaction
@@ -284,7 +306,10 @@ export default function MapScene({ visible }) {
       gsap.to('#tl-nav', { opacity: 1, duration: 0.6, delay: 0.4, ease: 'power2.out' });
     });
 
-    return () => map.remove();
+    return () => {
+      if (pulseRafRef.current) cancelAnimationFrame(pulseRafRef.current);
+      map.remove();
+    };
   }, [visible]);
 
   const selectCountry = (name, featureId) => {
