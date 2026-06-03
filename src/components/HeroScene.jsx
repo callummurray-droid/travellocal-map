@@ -271,11 +271,10 @@ export default function HeroScene({ onExplore }) {
                 // Dim all sibling cards
                 const siblings = e.currentTarget.parentElement.children;
                 Array.from(siblings).forEach((el, j) => {
-                  if (el !== e.currentTarget) el.style.filter = 'brightness(0.5)';
+                  if (el !== e.currentTarget) el.style.filter = 'brightness(0.72)';
                 });
-                // Also lift marquee opacity to full on hover
                 const wrap = document.getElementById('marquee-wrap');
-                if (wrap) wrap.style.opacity = '0.85';
+                if (wrap) wrap.style.opacity = '1';
               }}
               onMouseLeave={(e) => {
                 // Resume marquee
