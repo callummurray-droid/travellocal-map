@@ -40,7 +40,7 @@ const POI_CONTENT = {
         img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80',
         itinerary: [
           { day: 1, label: 'Colosseum & Roman Forum',  coords: [12.4922, 41.8902], description: 'Start at the Colosseum at dawn, descend into the hypogeum, then walk the Forum' },
-          { day: 2, label: 'Vatican & St Peter\'s',    coords: [12.4534, 41.9022], description: 'Vatican Museums, Sistine Chapel and climb the dome of St Peter\'s Basilica' },
+          { day: 2, label: 'Vatican & St Peters',    coords: [12.4534, 41.9022], description: 'Vatican Museums, Sistine Chapel and climb the dome of St Peters Basilica' },
           { day: 3, label: 'Trastevere & Pantheon',   coords: [12.4769, 41.8986], description: 'Morning at the Pantheon, afternoon wandering Trastevere's cobbled streets' },
           { day: 4, label: 'Borghese Gallery & Villa', coords: [12.4922, 41.9141], description: 'Bernini sculptures at the Borghese, picnic in the gardens, Piazza del Popolo' },
           { day: 5, label: 'Trevi & Spanish Steps',   coords: [12.4833, 41.9009], description: 'Trevi Fountain at sunrise, Spanish Steps, farewell lunch in the Campo de Fiori' },
@@ -51,7 +51,7 @@ const POI_CONTENT = {
         img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&q=80',
         itinerary: [
           { day: 1, label: 'Colosseum & Palatine Hill', coords: [12.4922, 41.8902], description: 'Full day at the Colosseum complex including Palatine Hill and the Roman Forum' },
-          { day: 2, label: 'Vatican Museums',           coords: [12.4534, 41.9022], description: 'Early entry to Vatican Museums, Sistine Chapel and St Peter\'s Square' },
+          { day: 2, label: 'Vatican Museums',           coords: [12.4534, 41.9022], description: 'Early entry to Vatican Museums, Sistine Chapel and St Peters Square' },
           { day: 3, label: 'Pantheon & Centro Storico', coords: [12.4769, 41.8986], description: 'Pantheon, Piazza Navona and the historic centre on foot' },
         ],
       },
