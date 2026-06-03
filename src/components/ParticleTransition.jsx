@@ -81,10 +81,12 @@ export default function ParticleTransition({ active, capturedCards, onComplete }
         const elapsed  = ts - startTime;
         const progress = Math.min(elapsed / DURATION, 1);
 
-        // Draw gradient matching hero exactly — no jarring colour change
+        // Match hero gradient exactly — #13294B top fading to near-same dark at bottom
+        // Hero uses rgba(255,255,255,0.10) on dark navy bg which reads as ~#1a2d3d
         const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        grad.addColorStop(0, '#13294B');
-        grad.addColorStop(1, 'rgba(255,255,255,0.10)');
+        grad.addColorStop(0,   '#13294B');
+        grad.addColorStop(0.5, '#162d4a');
+        grad.addColorStop(1,   '#192f48');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
