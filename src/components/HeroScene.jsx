@@ -190,7 +190,7 @@ export default function HeroScene({ onExplore }) {
     >
       {/* Navy background */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(180deg, #1c3260 0%, #162a50 30%, #101f3c 65%, #0d1829 100%)'
+        background: 'linear-gradient(180deg, #13294B 0%, rgba(255,255,255,0.10) 100%)'
       }}/>
 
       {/* World map spotlight canvas — sits above bg, below cards */}
