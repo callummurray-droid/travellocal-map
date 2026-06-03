@@ -373,7 +373,7 @@ export default function HeroScene({ onExplore }) {
             }
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <path d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"/>
             <path d="M19 14l0.8 2.7L22 17.5l-2.2.8L19 21l-.8-2.7L16 17.5l2.2-.8L19 14z"/>
             <path d="M5 2l.6 1.9L7.5 4.5 5.6 5.1 5 7l-.6-1.9L2.5 4.5l1.9-.6L5 2z"/>
@@ -406,8 +406,9 @@ export default function HeroScene({ onExplore }) {
       >
         <svg
           id="cursor-arrow"
-          width="22" height="22" viewBox="0 0 24 24"
-          fill="white" stroke="none"
+          width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="white" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
           style={{
             opacity: 0,
             transform: 'scale(0.5)',
@@ -415,9 +416,7 @@ export default function HeroScene({ onExplore }) {
             flexShrink: 0,
           }}
         >
-          <path d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"/>
-          <path d="M19 14l0.8 2.7L22 17.5l-2.2.8L19 21l-.8-2.7L16 17.5l2.2-.8L19 14z"/>
-          <path d="M5 2l.6 1.9L7.5 4.5 5.6 5.1 5 7l-.6-1.9L2.5 4.5l1.9-.6L5 2z"/>
+          <path d="M5 12h14M12 5l7 7-7 7"/>
         </svg>
       </div>
 
