@@ -181,8 +181,10 @@ export default function MapScene({ visible }) {
   const hideTimerRef  = useRef(null);
   const poiMarkersRef = useRef([]);
   const is3DRef       = useRef(false);
-  const [mode3D, setMode3D]   = useState(false);
-  const [activePOI, setActivePOI] = useState(null);
+  const [mode3D, setMode3D]         = useState(false);
+  const [activePOI, setActivePOI]   = useState(null);
+  const audioRef      = useRef(null);
+  const audioFadeRef  = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -506,6 +508,7 @@ export default function MapScene({ visible }) {
     is3DRef.current = true;
     setMode3D(true);
     setActivePOI(poi);
+    stopAudio(); // Pause music during 3D exploration
 
     // Switch to satellite-streets style for the 3D view
     map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
@@ -748,14 +751,73 @@ export default function MapScene({ visible }) {
         essential: true,
       });
 
-      // Restore selected country state + POI pins + panel
+      // Restore selected country state + POI pins + panel + audio
       if (countryToRestore) {
         setTimeout(() => {
           addPOIs(countryToRestore.name);
           setSelectedCountry(countryToRestore);
           setPanelOpen(true);
+          playCountryAudio(countryToRestore.name);
         }, 500);
       }
+    });
+  };
+
+  // Country audio tracks — add MP3s to /public/audio/
+  const COUNTRY_AUDIO = {
+    Italy:    '/audio/italy.mp3',
+    France:   '/audio/france.mp3',
+    Japan:    '/audio/japan.mp3',
+    Morocco:  '/audio/morocco.mp3',
+    Spain:    '/audio/spain.mp3',
+    Greece:   '/audio/greece.mp3',
+    Portugal: '/audio/portugal.mp3',
+  };
+
+  const stopAudio = (immediate = false) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    clearInterval(audioFadeRef.current);
+    if (immediate) {
+      audio.pause();
+      audio.currentTime = 0;
+      return;
+    }
+    // Fade out over 1.5s
+    const startVol = audio.volume;
+    const step = startVol / 30;
+    audioFadeRef.current = setInterval(() => {
+      if (audio.volume > step) {
+        audio.volume = Math.max(0, audio.volume - step);
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 1;
+        clearInterval(audioFadeRef.current);
+      }
+    }, 50);
+  };
+
+  const playCountryAudio = (name) => {
+    const src = COUNTRY_AUDIO[name];
+    if (!src) return;
+    stopAudio(true);
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.volume = 0;
+    audioRef.current = audio;
+    audio.play().then(() => {
+      // Fade in over 2s
+      clearInterval(audioFadeRef.current);
+      audioFadeRef.current = setInterval(() => {
+        if (audio.volume < 0.28) {
+          audio.volume = Math.min(0.28, audio.volume + 0.01);
+        } else {
+          clearInterval(audioFadeRef.current);
+        }
+      }, 50);
+    }).catch(() => {
+      // Autoplay blocked — silently ignore
     });
   };
 
@@ -763,6 +825,7 @@ export default function MapScene({ visible }) {
     const config = ALL_CONFIG[name];
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
+    playCountryAudio(name);
 
     // Fly to country
     const fly = COUNTRY_FLY[name] || COUNTRY_FLY.default;
@@ -806,6 +869,7 @@ export default function MapScene({ visible }) {
   const closePanel = () => {
     setPanelOpen(false);
     clearPOIs();
+    stopAudio();
     if (mapRef.current && selectedCountry?.featureId != null) {
       mapRef.current.setFeatureState(
         { source: 'countries', sourceLayer: 'country_boundaries', id: selectedCountry.featureId },
