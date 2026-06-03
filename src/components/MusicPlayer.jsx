@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 
 export default function MusicPlayer({ country, audioRef, visible }) {
   const [playing, setPlaying]   = useState(true);
-  const [volume, setVolume]     = useState(0.28);
+  const [volume, setVolume]     = useState(0.10);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const playerRef = useRef(null);

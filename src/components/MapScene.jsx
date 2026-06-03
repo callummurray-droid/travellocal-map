@@ -895,8 +895,8 @@ export default function MapScene({ visible }) {
       // Fade in over 2s
       clearInterval(audioFadeRef.current);
       audioFadeRef.current = setInterval(() => {
-        if (audio.volume < 0.28) {
-          audio.volume = Math.min(0.28, audio.volume + 0.01);
+        if (audio.volume < 0.10) {
+          audio.volume = Math.min(0.10, audio.volume + 0.01);
         } else {
           clearInterval(audioFadeRef.current);
         }
