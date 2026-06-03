@@ -35,8 +35,26 @@ const POI_CONTENT = {
     expert: { name: 'Marco', role: 'Rome & Lazio expert', img: '/experts/expert1.png' },
     quote: '"The Colosseum looks incredible in photos but nothing prepares you for standing in front of it at golden hour. I\'ll take you underground through the hypogeum — where gladiators waited — and then up to the top tier where the view over Rome is simply breathtaking."',
     trips: [
-      { title: 'Rome in depth — 5 days with a local', days: 5, price: '£1,800', img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80' },
-      { title: 'Ancient Rome & the Vatican', days: 3, price: '£1,200', img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&q=80' },
+      {
+        title: 'Rome in depth — 5 days with a local', days: 5, price: '£1,800',
+        img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80',
+        itinerary: [
+          { day: 1, label: 'Colosseum & Roman Forum',  coords: [12.4922, 41.8902], description: 'Start at the Colosseum at dawn, descend into the hypogeum, then walk the Forum' },
+          { day: 2, label: 'Vatican & St Peter\'s',    coords: [12.4534, 41.9022], description: 'Vatican Museums, Sistine Chapel and climb the dome of St Peter\'s Basilica' },
+          { day: 3, label: 'Trastevere & Pantheon',   coords: [12.4769, 41.8986], description: 'Morning at the Pantheon, afternoon wandering Trastevere's cobbled streets' },
+          { day: 4, label: 'Borghese Gallery & Villa', coords: [12.4922, 41.9141], description: 'Bernini sculptures at the Borghese, picnic in the gardens, Piazza del Popolo' },
+          { day: 5, label: 'Trevi & Spanish Steps',   coords: [12.4833, 41.9009], description: 'Trevi Fountain at sunrise, Spanish Steps, farewell lunch in the Campo de\' Fiori' },
+        ],
+      },
+      {
+        title: 'Ancient Rome & the Vatican', days: 3, price: '£1,200',
+        img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&q=80',
+        itinerary: [
+          { day: 1, label: 'Colosseum & Palatine Hill', coords: [12.4922, 41.8902], description: 'Full day at the Colosseum complex including Palatine Hill and the Roman Forum' },
+          { day: 2, label: 'Vatican Museums',           coords: [12.4534, 41.9022], description: 'Early entry to Vatican Museums, Sistine Chapel and St Peter\'s Square' },
+          { day: 3, label: 'Pantheon & Centro Storico', coords: [12.4769, 41.8986], description: 'Pantheon, Piazza Navona and the historic centre on foot' },
+        ],
+      },
       { title: 'Rome, Orvieto & hill towns', days: 7, price: '£2,400', img: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400&q=80' },
     ],
   },
@@ -174,7 +192,7 @@ const LOCAL_EXPERTS = {
   ],
 };
 
-export default function SidePanel({ country, config, activePOI, onClose }) {
+export default function SidePanel({ country, config, activePOI, onClose, onTripSelect }) {
   const panelRef    = useRef(null);
   const [imgIdx, setImgIdx]                 = useState(0);
   const [wishlisted, setWishlisted]         = useState(false);
@@ -409,6 +427,26 @@ export default function SidePanel({ country, config, activePOI, onClose }) {
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#152238', lineHeight: 1.4, margin: '0 0 6px' }}>{trip.title}</p>
                   <p style={{ fontSize: 11, color: '#8a9aaa', margin: 0 }}>{trip.days} days</p>
                   <p style={{ fontSize: 11, color: '#3d4f5c', fontWeight: 700, margin: '3px 0 0' }}>from {trip.price} per person</p>
+                  {trip.itinerary && (
+                    <button
+                      onClick={() => onTripSelect && onTripSelect(trip)}
+                      style={{
+                        marginTop: 8, width: '100%', padding: '5px 0',
+                        borderRadius: 6, border: 'none', cursor: 'none',
+                        background: '#152238',
+                        fontFamily: 'Mulish, sans-serif', fontSize: 10, fontWeight: 700,
+                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#2ab5a0'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#152238'}
+                    >
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      Map this trip
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

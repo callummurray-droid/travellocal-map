@@ -204,6 +204,8 @@ export default function MapScene({ visible }) {
   const selectedFeatureIdRef = useRef(null);
   const fireworksRef  = useRef(null);
   const orbitRafRef   = useRef(null);
+  const itinMarkersRef = useRef([]);
+  const [activeTrip, setActiveTrip] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -551,6 +553,109 @@ export default function MapScene({ visible }) {
 
       poiMarkersRef.current.push(marker);
     });
+  };
+
+  const clearItinerary = () => {
+    const map = mapRef.current;
+    itinMarkersRef.current.forEach(m => m.remove());
+    itinMarkersRef.current = [];
+    if (map) {
+      if (map.getLayer('itin-route')) map.removeLayer('itin-route');
+      if (map.getSource('itin-route')) map.removeSource('itin-route');
+    }
+    setActiveTrip(null);
+  };
+
+  const showTripItinerary = (trip) => {
+    const map = mapRef.current;
+    if (!map || !trip?.itinerary) return;
+
+    clearItinerary();
+    setActiveTrip(trip);
+
+    const stops = trip.itinerary;
+    const coords = stops.map(s => s.coords);
+
+    // Fit map to show all stops with padding for the panel
+    const bounds = coords.reduce((b, c) => {
+      return [[Math.min(b[0][0], c[0]), Math.min(b[0][1], c[1])],
+              [Math.max(b[1][0], c[0]), Math.max(b[1][1], c[1])]];
+    }, [coords[0], coords[0]]);
+
+    map.fitBounds(bounds, {
+      padding: { top: 80, bottom: 80, left: 80, right: 600 },
+      pitch: 45,
+      duration: 1800,
+    });
+
+    // Draw route line after fly
+    setTimeout(() => {
+      if (!map) return;
+
+      // Remove old if exists
+      if (map.getLayer('itin-route')) map.removeLayer('itin-route');
+      if (map.getSource('itin-route')) map.removeSource('itin-route');
+
+      map.addSource('itin-route', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: coords },
+        },
+      });
+
+      // Dashed line connecting stops
+      map.addLayer({
+        id: 'itin-route',
+        type: 'line',
+        source: 'itin-route',
+        paint: {
+          'line-color': '#2ab5a0',
+          'line-width': 2,
+          'line-dasharray': [2, 2],
+          'line-opacity': 0.8,
+        },
+      });
+
+      // Numbered stop markers
+      stops.forEach((stop, i) => {
+        const el = document.createElement('div');
+        el.style.cssText = `
+          display: flex; flex-direction: column; align-items: center;
+          cursor: none; pointer-events: none;
+        `;
+
+        const badge = document.createElement('div');
+        badge.style.cssText = `
+          width: 26px; height: 26px; border-radius: 50%;
+          background: #152238; border: 2.5px solid #2ab5a0;
+          display: flex; align-items: center; justify-content: center;
+          font-family: Mulish, sans-serif; font-size: 11px; font-weight: 800;
+          color: white; flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        `;
+        badge.textContent = i + 1;
+
+        const lbl = document.createElement('div');
+        lbl.textContent = `Day ${stop.day} · ${stop.label}`;
+        lbl.style.cssText = `
+          margin-top: 5px; padding: 3px 8px;
+          background: rgba(13,24,41,0.92); color: white;
+          font-family: Mulish, sans-serif; font-size: 9px; font-weight: 700;
+          border-radius: 5px; white-space: nowrap;
+          border: 1px solid rgba(42,181,160,0.4);
+          max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+        `;
+
+        el.appendChild(badge);
+        el.appendChild(lbl);
+
+        const marker = new mapboxgl.Marker({ element: el, anchor: 'top' })
+          .setLngLat(stop.coords)
+          .addTo(map);
+        itinMarkersRef.current.push(marker);
+      });
+    }, 1900);
   };
 
   const stopOrbit = () => {
@@ -967,6 +1072,7 @@ export default function MapScene({ visible }) {
   const closePanel = () => {
     setPanelOpen(false);
     clearPOIs();
+    clearItinerary();
     stopAudio();
     // Use ref for reliable feature state clearing (not stale state)
     if (mapRef.current && selectedFeatureIdRef.current != null) {
@@ -1293,7 +1399,41 @@ export default function MapScene({ visible }) {
         config={selectedCountry?.config}
         activePOI={mode3D ? activePOI : null}
         onClose={closePanel}
+        onTripSelect={showTripItinerary}
       />
+
+      {/* Itinerary legend — shown when a trip is mapped */}
+      {activeTrip && (
+        <div style={{
+          position: 'absolute', top: 20, left: 20, zIndex: 60,
+          background: 'rgba(13,24,41,0.92)', backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(42,181,160,0.3)', borderRadius: 16,
+          padding: '16px 18px', maxWidth: 280,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <p style={{ fontFamily: 'Mulish, sans-serif', fontSize: 10, color: '#2ab5a0', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 3px' }}>Trip itinerary</p>
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: 13, color: 'white', margin: 0 }}>{activeTrip.title}</p>
+            </div>
+            <button onClick={clearItinerary} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'none', flexShrink: 0, marginLeft: 12 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {activeTrip.itinerary.map((stop, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#152238', border: '2px solid #2ab5a0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                  <span style={{ fontFamily: 'Mulish, sans-serif', fontSize: 9, fontWeight: 800, color: 'white' }}>{i + 1}</span>
+                </div>
+                <div>
+                  <p style={{ fontFamily: 'Mulish, sans-serif', fontSize: 11, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>Day {stop.day} · {stop.label}</p>
+                  <p style={{ fontFamily: 'Mulish, sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.5 }}>{stop.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Fireworks canvas */}
       <Fireworks ref={fireworksRef} />
