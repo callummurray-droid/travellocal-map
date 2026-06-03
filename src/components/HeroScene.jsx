@@ -262,33 +262,40 @@ export default function HeroScene({ onExplore }) {
                 cursor: 'none',
               }}
               onMouseEnter={(e) => {
-                // Pause marquee
                 if (tweenRef.current) tweenRef.current.pause();
-                // Lift hovered card
                 e.currentTarget.style.transform = `translateY(${Y_OFFSETS[i % Y_OFFSETS.length] - 8}px) scale(1.04)`;
                 e.currentTarget.style.boxShadow = `0 24px 60px ${card.shadow}`;
                 e.currentTarget.style.zIndex = '10';
-                // Dim all sibling cards
                 const siblings = e.currentTarget.parentElement.children;
                 Array.from(siblings).forEach((el, j) => {
                   if (el !== e.currentTarget) el.style.filter = 'brightness(0.72)';
                 });
                 const wrap = document.getElementById('marquee-wrap');
                 if (wrap) wrap.style.opacity = '1';
+                const cur = document.getElementById('custom-cursor');
+                if (cur) {
+                  cur.style.width = '80px';
+                  cur.style.height = '80px';
+                  cur.style.boxShadow = '0 0 40px 16px rgba(42,181,160,0.4), 0 0 0 1px rgba(42,181,160,0.6)';
+                  cur.style.opacity = '0.85';
+                }
               }}
               onMouseLeave={(e) => {
-                // Resume marquee
                 if (tweenRef.current) tweenRef.current.play();
-                // Reset hovered card
                 e.currentTarget.style.transform = `translateY(${Y_OFFSETS[i % Y_OFFSETS.length]}px) scale(1)`;
                 e.currentTarget.style.boxShadow = `0 8px 32px ${card.shadow}`;
                 e.currentTarget.style.zIndex = '';
-                // Restore siblings
                 const siblings = e.currentTarget.parentElement.children;
                 Array.from(siblings).forEach(el => { el.style.filter = ''; });
-                // Return marquee to 50% opacity
                 const wrap = document.getElementById('marquee-wrap');
                 if (wrap) wrap.style.opacity = '0.5';
+                const cur = document.getElementById('custom-cursor');
+                if (cur) {
+                  cur.style.width = '12px';
+                  cur.style.height = '12px';
+                  cur.style.boxShadow = '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)';
+                  cur.style.opacity = '1';
+                }
               }}
             >
               <img
