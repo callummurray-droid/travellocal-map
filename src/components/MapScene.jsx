@@ -571,27 +571,40 @@ export default function MapScene({ visible }) {
     setActiveTrip(null);
   };
 
-  const showTripItinerary = (trip) => {
+  const showTripItinerary = async (trip) => {
     const map = mapRef.current;
     if (!map || !trip?.itinerary) return;
 
     clearItinerary();
     setActiveTrip(trip);
 
-    const stops = trip.itinerary;
+    const stops  = trip.itinerary;
     const coords = stops.map(s => s.coords);
 
-    // Fit map to show all stops with padding for the panel
-    const bounds = coords.reduce((b, c) => {
-      return [[Math.min(b[0][0], c[0]), Math.min(b[0][1], c[1])],
-              [Math.max(b[1][0], c[0]), Math.max(b[1][1], c[1])]];
-    }, [coords[0], coords[0]]);
+    // Fit map to show all stops
+    const bounds = coords.reduce((b, c) => [
+      [Math.min(b[0][0], c[0]), Math.min(b[0][1], c[1])],
+      [Math.max(b[1][0], c[0]), Math.max(b[1][1], c[1])],
+    ], [coords[0], coords[0]]);
 
     map.fitBounds(bounds, {
       padding: { top: 80, bottom: 80, left: 80, right: 600 },
-      pitch: 45,
-      duration: 1800,
+      pitch: 30, duration: 1800,
     });
+
+    // Fetch road-following route from Mapbox Directions API
+    let routeCoords = coords; // fallback to straight lines
+    try {
+      const waypoints = coords.map(c => c.join(',')).join(';');
+      const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${waypoints}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (data.routes?.[0]?.geometry?.coordinates) {
+        routeCoords = data.routes[0].geometry.coordinates;
+      }
+    } catch (e) {
+      console.warn('Directions API failed, using straight lines', e);
+    }
 
     // Draw animated canvas route after fly settles
     setTimeout(() => {
@@ -605,18 +618,18 @@ export default function MapScene({ visible }) {
       const ctx = canvas.getContext('2d');
       let dashOffset = 0;
       let lastTs = null;
-      const DASH_SPEED = 8; // pixels per second — slow and smooth
+      const DASH_SPEED = 8;
 
       const drawFrame = (ts) => {
-        if (!itinRafRef.current) return; // stopped
+        if (!itinRafRef.current) return;
         if (lastTs !== null) {
-          const dt = (ts - lastTs) / 1000; // seconds since last frame
+          const dt = (ts - lastTs) / 1000;
           dashOffset = (dashOffset - DASH_SPEED * dt) % 28;
         }
         lastTs = ts;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const pts = coords.map(c => { const p = map.project(c); return [p.x, p.y]; });
+        const pts = routeCoords.map(c => { const p = map.project(c); return [p.x, p.y]; });
         if (pts.length < 2) { itinRafRef.current = requestAnimationFrame(drawFrame); return; }
 
         const draw = (width, style, alpha = 1, dash = [], dashOff = 0) => {
