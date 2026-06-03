@@ -625,16 +625,6 @@ export default function MapScene({ visible }) {
         essential: true,
         easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
       });
-
-      // Start orbit after fly-in completes
-      map.once('moveend', () => {
-        if (!is3DRef.current) return;
-        startOrbit(map, poi.coords);
-      });
-
-      // Stop orbit if user manually drags
-      map.on('dragstart', () => stopOrbit());
-      map.on('rotatestart', () => stopOrbit());
     });
   };
 
@@ -1149,32 +1139,7 @@ export default function MapScene({ visible }) {
             {/* Divider */}
             <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
 
-            {/* Orbit toggle */}
-            <button
-              onClick={() => {
-                if (isOrbiting) {
-                  stopOrbit();
-                } else {
-                  startOrbit(mapRef.current, activePOI?.coords);
-                }
-              }}
-              title={isOrbiting ? 'Stop orbit' : 'Start orbit'}
-              style={{
-                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
-                background: isOrbiting ? 'rgba(42,181,160,0.3)' : 'rgba(13,24,41,0.85)',
-                backdropFilter: 'blur(12px)',
-                color: isOrbiting ? '#2ab5a0' : 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                transition: 'background 0.2s, color 0.2s',
-              }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/>
-              </svg>
-            </button>
-
-            {/* Divider */}
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
+            {/* Zoom in */}
             <button
               onClick={() => mapRef.current?.zoomIn()}
               style={{
