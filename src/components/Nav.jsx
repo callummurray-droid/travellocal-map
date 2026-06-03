@@ -90,15 +90,15 @@ export default function Nav() {
           <div style={{ position: 'relative', width: 42, height: 42 }}>
             {/* Bracket corners */}
             <svg width="42" height="42" viewBox="0 0 42 42" fill="none" style={{ position: 'absolute', inset: 0 }}>
-              <path d="M3 13 L3 3 L13 3"   stroke="#152238" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M29 39 L39 39 L39 29" stroke="#152238" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 13 L3 3 L13 3"   stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M29 39 L39 39 L39 29" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             {/* Text */}
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Georgia, serif', color: '#152238',
+              fontFamily: 'Georgia, serif', color: 'white',
               fontSize: 9.5, fontWeight: 600, lineHeight: 1.3,
               textAlign: 'center', letterSpacing: '0.02em',
             }}>
@@ -120,15 +120,15 @@ export default function Nav() {
               className="nav-link"
               style={{
                 fontFamily: 'Mulish, sans-serif',
-                color: 'rgba(21, 34, 56, 0.85)',
+                color: 'rgba(255,255,255,0.9)',
                 fontSize: 15,
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
                 opacity: 0,
                 display: 'block',
               }}
-              onMouseEnter={e => { e.target.style.color = '#152238'; }}
-              onMouseLeave={e => { e.target.style.color = 'rgba(21, 34, 56, 0.85)'; }}
+              onMouseEnter={e => { e.target.style.color = '#ffffff'; }}
+              onMouseLeave={e => { e.target.style.color = 'rgba(255,255,255,0.9)'; }}
             >
               {link}
             </a>
@@ -143,7 +143,7 @@ export default function Nav() {
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(21, 34, 56, 0.85)" strokeWidth="2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </button>
@@ -153,7 +153,7 @@ export default function Nav() {
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(21, 34, 56, 0.85)" strokeWidth="2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             </svg>
