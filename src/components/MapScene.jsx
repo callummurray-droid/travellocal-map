@@ -455,40 +455,48 @@ export default function MapScene({ visible }) {
     if (!pois || !mapRef.current) return;
 
     pois.forEach(poi => {
+      // Wrapper — Mapbox controls position via translate, we must not set transform here
       const el = document.createElement('div');
       el.style.cssText = `
         display: flex; flex-direction: column; align-items: center;
         cursor: pointer; pointer-events: auto;
-        transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
-        position: relative; z-index: 40;
+        will-change: contents;
       `;
-      el.onmouseenter = () => { el.style.transform = 'scale(1.2)'; };
-      el.onmouseleave = () => { el.style.transform = 'scale(1)'; };
+
+      // Inner wrapper we scale on hover — isolated from Mapbox's positioning
+      const inner = document.createElement('div');
+      inner.style.cssText = `
+        display: flex; flex-direction: column; align-items: center;
+        transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        transform-origin: bottom center;
+      `;
+      inner.onmouseenter = () => { inner.style.transform = 'scale(1.15)'; };
+      inner.onmouseleave = () => { inner.style.transform = 'scale(1)'; };
 
       const dot = document.createElement('div');
       dot.style.cssText = `
         width: 10px; height: 10px; border-radius: 50%;
         background: #2ab5a0; border: 2px solid white;
-        box-shadow: 0 0 0 3px rgba(42,181,160,0.3), 0 2px 8px rgba(0,0,0,0.4);
-        transition: background 0.2s;
+        box-shadow: 0 0 0 3px rgba(42,181,160,0.25), 0 2px 6px rgba(0,0,0,0.35);
+        flex-shrink: 0;
       `;
 
       const label = document.createElement('div');
       label.textContent = poi.name;
       label.style.cssText = `
         margin-top: 5px; padding: 3px 9px;
-        background: rgba(21,34,56,0.9); color: white;
+        background: rgba(13,24,41,0.88); color: white;
         font-family: Mulish, sans-serif; font-size: 10px; font-weight: 700;
         border-radius: 6px; white-space: nowrap;
-        backdrop-filter: blur(6px);
-        border: 1px solid rgba(42,181,160,0.4);
+        border: 1px solid rgba(42,181,160,0.35);
         letter-spacing: 0.03em;
+        pointer-events: none;
       `;
 
-      el.appendChild(dot);
-      el.appendChild(label);
+      inner.appendChild(dot);
+      inner.appendChild(label);
+      el.appendChild(inner);
 
-      // Click → 3D dive-in
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         diveIntoPOI(poi);
@@ -828,11 +836,13 @@ export default function MapScene({ visible }) {
         const [lat, lng] = config.coordinates.replace(/[°NSEW]/g, '').split(',').map(Number);
         center = [lng || 0, lat || 0];
       }
+      // Add POI pins after fly settles — wait for idle not just a timeout
       if (center) {
         mapRef.current.flyTo({ center, zoom: fly.zoom || 5, duration: 1400, essential: true });
+        mapRef.current.once('idle', () => addPOIs(name));
+      } else {
+        setTimeout(() => addPOIs(name), 800);
       }
-      // Add POI pins after fly completes
-      setTimeout(() => addPOIs(name), 800);
     }
 
     // Set selected feature state
