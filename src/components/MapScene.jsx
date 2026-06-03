@@ -481,7 +481,7 @@ export default function MapScene({ visible }) {
       const el = document.createElement('div');
       el.style.cssText = `
         display: flex; flex-direction: column; align-items: center;
-        cursor: pointer; pointer-events: auto;
+        cursor: none; pointer-events: auto;
         will-change: contents;
       `;
 
@@ -491,6 +491,7 @@ export default function MapScene({ visible }) {
         display: flex; flex-direction: column; align-items: center;
         transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
         transform-origin: bottom center;
+        cursor: none;
       `;
       inner.onmouseenter = () => { inner.style.transform = 'scale(1.15)'; };
       inner.onmouseleave = () => { inner.style.transform = 'scale(1)'; };
