@@ -7,6 +7,7 @@ import { FLAG_COLOURS_MAP, getPrimaryColour } from '../data/flagColours';
 import SidePanel from './SidePanel';
 import CountryPopup from './CountryPopup';
 import MusicPlayer from './MusicPlayer';
+import Fireworks from './Fireworks';
 
 // Merge all configs
 const ALL_CONFIG = { ...COUNTRY_CONFIG, ...EXTRA_COUNTRY_CONFIG };
@@ -200,6 +201,7 @@ export default function MapScene({ visible }) {
   const audioRef      = useRef(null);
   const audioFadeRef  = useRef(null);
   const selectedFeatureIdRef = useRef(null);
+  const fireworksRef  = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -949,8 +951,16 @@ export default function MapScene({ visible }) {
     }
   };
 
-  const doSurprise = () => {
-    const keys = Object.keys(COUNTRY_CONFIG);
+  const doSurprise = (e) => {
+    // Fire fireworks from button position
+    if (fireworksRef.current && e?.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      fireworksRef.current.burst(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
+    }
+    const keys = Object.keys(ALL_CONFIG);
     const pick = keys[Math.floor(Math.random() * keys.length)];
     flyToCountry(pick);
   };
@@ -1171,7 +1181,7 @@ export default function MapScene({ visible }) {
             </div>
 
             {/* Surprise me — inline right of search */}
-            <button onClick={doSurprise}
+            <button onClick={(e) => doSurprise(e)}
               className="flex items-center gap-2 px-5 py-3 rounded-full font-body text-sm font-semibold transition-all duration-200 hover:scale-105"
               style={{ background: 'rgba(42,181,160,0.15)', border: '1px solid rgba(42,181,160,0.35)', color: '#2ab5a0', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}
             >
@@ -1225,6 +1235,9 @@ export default function MapScene({ visible }) {
         config={selectedCountry?.config}
         onClose={closePanel}
       />
+
+      {/* Fireworks canvas */}
+      <Fireworks ref={fireworksRef} />
 
       {/* Music player — appears when country with audio is selected */}
       <MusicPlayer
