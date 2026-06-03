@@ -5,20 +5,18 @@ import MapScene from './components/MapScene';
 import IrisTransition from './components/IrisTransition';
 
 export default function App() {
-  const [phase, setPhase] = useState('hero'); // 'hero' | 'transitioning' | 'map'
+  const [phase, setPhase] = useState('hero');
   const [irisActive, setIrisActive] = useState(false);
   const ctaBounds = useRef(null);
 
   const handleExplore = () => {
-    // Capture CTA button position for iris origin
     const cta = document.getElementById('cta-btn');
     if (cta) {
       const r = cta.getBoundingClientRect();
       ctaBounds.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
     setPhase('transitioning');
-    // Start iris slightly after hero exit begins
-    setTimeout(() => setIrisActive(true), 300);
+    setTimeout(() => setIrisActive(true), 280);
   };
 
   const handleIrisComplete = () => {
@@ -28,19 +26,21 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#0d1829' }}>
+
+      {/* Nav always on top — z-50 sits above hero z-20 */}
       <Nav />
 
-      {/* Hero */}
+      {/* Hero — z-20, below nav */}
       {(phase === 'hero' || phase === 'transitioning') && (
-        <div className="absolute inset-0 z-20">
+        <div className="absolute inset-0" style={{ zIndex: 20 }}>
           <HeroScene onExplore={handleExplore} />
         </div>
       )}
 
-      {/* Map — always mounted once transitioning so it loads in background */}
+      {/* Map — mounts during transition so it loads in background */}
       <MapScene visible={phase === 'map' || phase === 'transitioning'} />
 
-      {/* Iris overlay */}
+      {/* Iris — z-200 sits above everything */}
       <IrisTransition
         active={irisActive}
         ctaPosition={ctaBounds.current}
