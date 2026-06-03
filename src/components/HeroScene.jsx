@@ -195,16 +195,34 @@ export default function HeroScene({ onExplore }) {
   }, []);
 
   const handleExplore = () => {
-    const tl = gsap.timeline({ onComplete: onExplore });
+    // Capture real screen positions of all visible marquee cards BEFORE animating
+    const cardEls = document.querySelectorAll('[data-marquee-card]');
+    const capturedCards = Array.from(cardEls).map(el => {
+      const rect = el.getBoundingClientRect();
+      const idx  = parseInt(el.getAttribute('data-card-index'));
+      return {
+        x:     rect.left + rect.width  / 2,
+        y:     rect.top  + rect.height / 2,
+        w:     rect.width,
+        h:     rect.height,
+        src:   ALL_CARDS[idx % ALL_CARDS.length].src,
+        shadow: ALL_CARDS[idx % ALL_CARDS.length].shadow,
+      };
+    }).filter(c => {
+      // Only include cards that are actually visible on screen
+      return c.x > -c.w && c.x < window.innerWidth + c.w &&
+             c.y > -c.h && c.y < window.innerHeight + c.h;
+    });
+
+    const tl = gsap.timeline({ onComplete: () => onExplore(capturedCards) });
     tl.to('#cta-btn', { scale: 1.06, duration: 0.12, ease: 'power2.out' })
       .to('#cta-btn', { scale: 0.95, duration: 0.08 });
     tl.to('.headline-word-inner', { y: '110%', duration: 0.5, stagger: 0.03, ease: 'power3.in' }, 0.15)
-      .to('#trustpilot',   { opacity: 0, y: -10, duration: 0.35 }, 0.15)
-      .to('#cta-btn',      { opacity: 0, scale: 0.9, duration: 0.3 }, 0.22)
-      .to('#marquee-wrap', { opacity: 0, duration: 0.4 }, 0.1)
-      .to('#spotlight-canvas', { opacity: 0, duration: 0.3 }, 0.1)
-      
-      .to('#custom-cursor', { opacity: 0, duration: 0.2 }, 0.1);
+      .to('#trustpilot',      { opacity: 0, y: -10, duration: 0.35 }, 0.15)
+      .to('#cta-btn',         { opacity: 0, scale: 0.9, duration: 0.3 }, 0.22)
+      .to('#spotlight-canvas',{ opacity: 0, duration: 0.3 }, 0.1)
+      .to('#custom-cursor',   { opacity: 0, duration: 0.2 }, 0.1);
+      // Note: marquee-wrap is NOT faded — cards stay visible until particle canvas takes over
   };
 
   const words = ['Explore','the','world','through','the','eyes','of','someone','who','lives','there'];
@@ -253,6 +271,8 @@ export default function HeroScene({ onExplore }) {
           {displayCards.map((card, i) => (
             <div
               key={i}
+              data-marquee-card="true"
+              data-card-index={i % ALL_CARDS.length}
               style={{
                 width: CARD_W, height: CARD_H, flexShrink: 0,
                 transform: `translateY(${Y_OFFSETS[i % Y_OFFSETS.length]}px)`,

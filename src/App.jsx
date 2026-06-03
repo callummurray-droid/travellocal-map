@@ -5,36 +5,38 @@ import MapScene from './components/MapScene';
 import ParticleTransition from './components/ParticleTransition';
 
 export default function App() {
-  const [phase, setPhase] = useState('hero');
+  const [phase, setPhase]               = useState('hero');
   const [particleActive, setParticleActive] = useState(false);
+  const capturedCardsRef                = useRef([]);
 
-  const handleExplore = () => {
+  // HeroScene calls this with the real card positions captured at click time
+  const handleExplore = (capturedCards) => {
+    capturedCardsRef.current = capturedCards;
     setPhase('transitioning');
-    setTimeout(() => setParticleActive(true), 400);
+    // Small delay so hero fade-out starts first, then canvas takes over
+    setTimeout(() => setParticleActive(true), 300);
   };
 
   const handleParticleComplete = () => {
     setParticleActive(false);
-    setPhase('map'); // map only mounts AFTER particles finish
+    setPhase('map');
   };
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#0d1829' }}>
       <Nav />
 
-      {/* Hero — shown during hero + transitioning phases */}
       {(phase === 'hero' || phase === 'transitioning') && (
         <div className="absolute inset-0" style={{ zIndex: 20 }}>
           <HeroScene onExplore={handleExplore} />
         </div>
       )}
 
-      {/* Map — only mounts after particles complete */}
       {phase === 'map' && <MapScene visible={true} />}
 
-      {/* Particles — sit above everything */}
       <ParticleTransition
         active={particleActive}
+        capturedCards={capturedCardsRef.current}
         onComplete={handleParticleComplete}
       />
     </div>
