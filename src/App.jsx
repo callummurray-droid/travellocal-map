@@ -3,10 +3,11 @@ import Nav from './components/Nav';
 import HeroScene from './components/HeroScene';
 import MapScene from './components/MapScene';
 import IrisTransition from './components/IrisTransition';
+import ParticleTransition from './components/ParticleTransition';
 
 export default function App() {
-  const [phase, setPhase]       = useState('hero');
-  const [irisActive, setIrisActive] = useState(false);
+  const [phase, setPhase] = useState('hero');
+  const [particleActive, setParticleActive] = useState(false);
   const ctaBounds = useRef(null);
 
   const handleExplore = () => {
@@ -16,35 +17,29 @@ export default function App() {
       ctaBounds.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
     setPhase('transitioning');
-    setTimeout(() => setIrisActive(true), 280);
+    setTimeout(() => setParticleActive(true), 350);
   };
 
-  const handleIrisComplete = () => {
+  const handleParticleComplete = () => {
+    setParticleActive(false);
     setPhase('map');
-    setIrisActive(false);
   };
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#0d1829' }}>
-
-      {/* Nav — always rendered, hamburger always visible */}
       <Nav />
 
-      {/* Hero */}
       {(phase === 'hero' || phase === 'transitioning') && (
         <div className="absolute inset-0" style={{ zIndex: 20 }}>
           <HeroScene onExplore={handleExplore} />
         </div>
       )}
 
-      {/* Map */}
       <MapScene visible={phase === 'map' || phase === 'transitioning'} />
 
-      {/* Iris */}
-      <IrisTransition
-        active={irisActive}
-        ctaPosition={ctaBounds.current}
-        onComplete={handleIrisComplete}
+      <ParticleTransition
+        active={particleActive}
+        onComplete={handleParticleComplete}
       />
     </div>
   );
