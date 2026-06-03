@@ -43,7 +43,7 @@ const POI_CONTENT = {
           { day: 2, label: 'Vatican & St Peter\'s',    coords: [12.4534, 41.9022], description: 'Vatican Museums, Sistine Chapel and climb the dome of St Peter\'s Basilica' },
           { day: 3, label: 'Trastevere & Pantheon',   coords: [12.4769, 41.8986], description: 'Morning at the Pantheon, afternoon wandering Trastevere's cobbled streets' },
           { day: 4, label: 'Borghese Gallery & Villa', coords: [12.4922, 41.9141], description: 'Bernini sculptures at the Borghese, picnic in the gardens, Piazza del Popolo' },
-          { day: 5, label: 'Trevi & Spanish Steps',   coords: [12.4833, 41.9009], description: 'Trevi Fountain at sunrise, Spanish Steps, farewell lunch in the Campo de\' Fiori' },
+          { day: 5, label: 'Trevi & Spanish Steps',   coords: [12.4833, 41.9009], description: 'Trevi Fountain at sunrise, Spanish Steps, farewell lunch in the Campo de Fiori' },
         ],
       },
       {
