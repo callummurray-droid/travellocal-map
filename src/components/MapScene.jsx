@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import { gsap } from 'gsap';
 import { MAPBOX_TOKEN, EXPERT_COUNTRIES, COUNTRY_CONFIG } from '../data/countries';
 import { EXTRA_COUNTRY_CONFIG } from '../data/countries';
+import { FLAG_COLOURS_MAP, getPrimaryColour } from '../data/flagColours';
 import SidePanel from './SidePanel';
 import CountryPopup from './CountryPopup';
 import MusicPlayer from './MusicPlayer';
@@ -172,30 +173,7 @@ const COUNTRY_FLY = {
   default:  { center: null, zoom: 5 },
 };
 
-// Flag colours keyed by Mapbox name_en — used for hover border and fill
-const FLAG_COLOURS_MAP = {
-  'Italy':'#CE2B37','Japan':'#BC002D','Morocco':'#006233','Spain':'#AA151B',
-  'France':'#0055A4','Greece':'#0D5EAF','Portugal':'#006600','Peru':'#D91023',
-  'Costa Rica':'#002B7F','Egypt':'#CE1126','India':'#FF9933','Thailand':'#A51931',
-  'Tunisia':'#E70013','Albania':'#E41E20','Argentina':'#74ACDF','Australia':'#00008B',
-  'Austria':'#ED2939','Belize':'#003F87','Bhutan':'#FF8000','Bolivia':'#D52B1E',
-  'Botswana':'#75AADB','Brazil':'#009C3B','Bulgaria':'#00966E','Cambodia':'#032EA1',
-  'Canada':'#FF0000','Chile':'#D52B1E','China':'#DE2910','Colombia':'#FCD116',
-  'Croatia':'#FF0000','Cuba':'#002A8F','Czechia':'#D7141A','Czech Republic':'#D7141A',
-  'Ecuador':'#FFD100','Estonia':'#0072CE','Finland':'#003580','Georgia':'#FF0000',
-  'Germany':'#FFCE00','Ghana':'#006B3F','Greenland':'#009A44','Guatemala':'#4997D0',
-  'Iceland':'#003897','Indonesia':'#CE1126','Jordan':'#007A3D','Kenya':'#006600',
-  'Kyrgyzstan':'#E8112D','Laos':'#CE1126','Latvia':'#9E3039','Lithuania':'#FDB913',
-  'Madagascar':'#FC3D32','Malaysia':'#CC0001','Malta':'#CF142B','Mexico':'#006847',
-  'Mongolia':'#C4272F','Montenegro':'#D4AF37','Namibia':'#003580','Nepal':'#003893',
-  'New Zealand':'#00247D','Nicaragua':'#3A75C4','Norway':'#EF2B2D','Oman':'#DB161B',
-  'Pakistan':'#01411C','Panama':'#DA121A','Philippines':'#0038A8','Poland':'#DC143C',
-  'Romania':'#002B7F','Rwanda':'#20603D','Slovenia':'#003DA5','South Africa':'#007A4D',
-  'Sri Lanka':'#8D153A','Switzerland':'#FF0000','Tanzania':'#1EB53A','Turkey':'#E30A17',
-  'Uganda':'#000000','United Arab Emirates':'#00732F','Uzbekistan':'#1EB53A',
-  'Vietnam':'#DA251D','Zimbabwe':'#006400','United Kingdom':'#C8102E','Sweden':'#006AA7',
-  'Scotland':'#C8102E','Wales':'#C8102E','England':'#C8102E','Northern Ireland':'#C8102E',
-};
+// Flag colour match expression for Mapbox GL paint — built from imported data
 const FLAG_COLOURS_EXPR = [
   'match', ['get', 'name_en'],
   ...Object.entries(FLAG_COLOURS_MAP).flatMap(([k,v]) => [k, v]),
@@ -925,7 +903,7 @@ export default function MapScene({ visible }) {
         { source: 'countries', sourceLayer: 'country_boundaries', id: featureId },
         { selected: true, hovered: false }
       );
-      const col = config?.colour || '#2ab5a0';
+      const col = getPrimaryColour(name);
       mapRef.current.setPaintProperty('country-fills', 'fill-color', [
         'case',
         ['boolean', ['feature-state', 'selected'], false], col,
