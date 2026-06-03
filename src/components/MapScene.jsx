@@ -18,6 +18,7 @@ const NAME_MAP = {
   'Northern Ireland':      'United Kingdom',
   'Ecuador':               'Ecuador and Galapagos',
   'Czech Republic':        'Czech Republic',
+  'Czechia':               'Czech Republic',
   'United Arab Emirates':  'United Arab Emirates',
   'South Africa':          'South Africa',
   'New Zealand':           'New Zealand',
