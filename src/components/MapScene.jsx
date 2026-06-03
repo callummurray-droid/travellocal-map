@@ -565,19 +565,23 @@ export default function MapScene({ visible }) {
     stopOrbit();
     setIsOrbiting(true);
     let startTime = null;
-    const ORBIT_SPEED = 0.018;
-    const BASE_PITCH  = 65;
-    const PITCH_SWAY  = 6;
-    const SWAY_PERIOD = 8000;
+    const ORBIT_SPEED = 0.012; // degrees per frame — slower, smoother
+    const BASE_PITCH  = 62;
+    const PITCH_SWAY  = 5;
+    const SWAY_PERIOD = 12000;
+    let bearing = map.getBearing();
 
     function orbit(ts) {
       if (!is3DRef.current || !map) return;
       if (!startTime) startTime = ts;
       const elapsed = ts - startTime;
-      const currentBearing = map.getBearing();
-      map.setBearing(currentBearing + ORBIT_SPEED);
-      const pitchOffset = Math.sin((elapsed / SWAY_PERIOD) * Math.PI * 2) * PITCH_SWAY;
-      map.setPitch(BASE_PITCH + pitchOffset);
+
+      bearing += ORBIT_SPEED;
+      const pitch = BASE_PITCH + Math.sin((elapsed / SWAY_PERIOD) * Math.PI * 2) * PITCH_SWAY;
+
+      // Single call per frame — no fighting between setBearing and setPitch
+      map.jumpTo({ bearing, pitch });
+
       orbitRafRef.current = requestAnimationFrame(orbit);
     }
     orbitRafRef.current = requestAnimationFrame(orbit);
