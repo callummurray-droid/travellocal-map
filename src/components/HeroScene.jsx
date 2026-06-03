@@ -281,7 +281,31 @@ export default function HeroScene({ onExplore }) {
           <span style={{ fontFamily: 'Mulish, sans-serif', color: '#00b67a', fontSize: 13, fontWeight: 600 }}>★ Trustpilot</span>
         </div>
 
-        <button id="cta-btn" className="cta-btn" onClick={handleExplore}>
+        <button 
+          id="cta-btn" 
+          className="cta-btn" 
+          onClick={handleExplore}
+          onMouseEnter={() => {
+            const cur = document.getElementById('custom-cursor');
+            if (cur) {
+              cur.style.width = '80px';
+              cur.style.height = '80px';
+              cur.style.background = '#2ab5a0';
+              cur.style.boxShadow = '0 0 40px 16px rgba(42,181,160,0.4), 0 0 0 1px rgba(42,181,160,0.6)';
+              cur.style.opacity = '0.85';
+            }
+          }}
+          onMouseLeave={() => {
+            const cur = document.getElementById('custom-cursor');
+            if (cur) {
+              cur.style.width = '12px';
+              cur.style.height = '12px';
+              cur.style.background = '#2ab5a0';
+              cur.style.boxShadow = '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)';
+              cur.style.opacity = '1';
+            }
+          }}
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
@@ -298,12 +322,12 @@ export default function HeroScene({ onExplore }) {
           width: 12,
           height: 12,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.9)',
-          boxShadow: '0 0 20px 6px rgba(255,255,255,0.25), 0 0 0 1px rgba(255,255,255,0.4)',
+          background: '#2ab5a0',
+          boxShadow: '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)',
           transform: 'translate(-50%, -50%)',
           pointerEvents: 'none',
           zIndex: 9999,
-          transition: 'width 0.2s, height 0.2s',
+          transition: 'width 0.35s cubic-bezier(0.34,1.56,0.64,1), height 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, opacity 0.35s ease',
           mixBlendMode: 'screen',
         }}
       />
