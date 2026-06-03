@@ -549,21 +549,27 @@ export default function MapScene({ visible }) {
   const exit3D = () => {
     const map = mapRef.current;
     if (!map) return;
+
+    // Capture before clearing
+    const countryToRestore = selectedCountry;
+
     is3DRef.current = false;
     setMode3D(false);
     setActivePOI(null);
 
-    const fly = selectedCountry ? (COUNTRY_FLY[selectedCountry.name] || COUNTRY_FLY.default) : COUNTRY_FLY.default;
+    const fly = countryToRestore
+      ? (COUNTRY_FLY[countryToRestore.name] || COUNTRY_FLY.default)
+      : COUNTRY_FLY.default;
 
-    // Switch back to dark style
+    // Switch back to dark style — this wipes all layers
     map.setStyle('mapbox://styles/mapbox/dark-v11');
 
-    // Restore dark style layers + fly back out once loaded
     map.once('style.load', () => {
+      // Restore style overrides
       map.setPaintProperty('background', 'background-color', '#0d1829');
       map.setPaintProperty('water', 'fill-color', '#0a1525');
 
-      // Re-add DEM source (no terrain active)
+      // Re-add DEM source
       map.addSource('mapbox-dem', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -571,6 +577,88 @@ export default function MapScene({ visible }) {
         maxzoom: 14,
       });
 
+      // Re-add countries source + layers
+      map.addSource('countries', {
+        type: 'vector',
+        url: 'mapbox://mapbox.country-boundaries-v1',
+      });
+      map.addLayer({
+        id: 'country-fills',
+        type: 'fill',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        filter: ['==', ['get', 'disputed'], 'false'],
+        paint: {
+          'fill-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], '#ffffff',
+            ['boolean', ['feature-state', 'hovered'], false], '#ffffff',
+            'rgba(0,0,0,0)',
+          ],
+          'fill-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], 0.92,
+            ['boolean', ['feature-state', 'hovered'], false], 0.15,
+            0,
+          ],
+        },
+      });
+      map.addLayer({
+        id: 'country-borders-selected',
+        type: 'line',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        paint: {
+          'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false],
+            countryToRestore?.config?.colour || '#e86030',
+            'rgba(0,0,0,0)',
+          ],
+          'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 3, 0],
+          'line-blur': 1,
+        },
+      });
+
+      // Re-add expert pins source + layers
+      map.addSource('expert-pins', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: EXPERT_PINS.map(pin => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: pin.coords },
+            properties: { name: pin.name },
+          })),
+        },
+      });
+      map.addLayer({
+        id: 'expert-pins-ring',
+        type: 'circle',
+        source: 'expert-pins',
+        paint: {
+          'circle-radius': 10,
+          'circle-color': 'transparent',
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': 'rgba(42,181,160,0.45)',
+          'circle-stroke-opacity': 0,
+        },
+      });
+      map.addLayer({
+        id: 'expert-pins-dot',
+        type: 'circle',
+        source: 'expert-pins',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 5, 5, 10, 7],
+          'circle-color': '#2ab5a0',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'rgba(255,255,255,0.85)',
+          'circle-opacity': 1,
+          'circle-stroke-opacity': 1,
+        },
+      });
+
+      // Fly back to country
       map.flyTo({
         center: fly.center || [12, 48],
         zoom: fly.zoom || 5,
@@ -580,9 +668,14 @@ export default function MapScene({ visible }) {
         essential: true,
       });
 
-      // Re-add POI pins for selected country
-      if (selectedCountry) {
-        setTimeout(() => addPOIs(selectedCountry.name), 600);
+      // Restore POI pins and reopen panel
+      if (countryToRestore) {
+        setTimeout(() => {
+          addPOIs(countryToRestore.name);
+          // Ensure panel stays open
+          setSelectedCountry(countryToRestore);
+          setPanelOpen(true);
+        }, 600);
       }
     });
   };
@@ -682,41 +775,134 @@ export default function MapScene({ visible }) {
       {/* Map */}
       <div ref={mapContainer} className="absolute inset-0" />
 
-      {/* 3D mode overlay — POI name + exit button */}
+      {/* 3D mode overlay — POI name + controls + exit */}
       {mode3D && activePOI && (
-        <div style={{
-          position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 60, display: 'flex', alignItems: 'center', gap: 12,
-          animation: 'fadeInHint 0.4s ease both',
-        }}>
-          {/* POI name pill */}
+        <>
+          {/* Top bar */}
           <div style={{
-            background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(42,181,160,0.4)',
-            borderRadius: 12, padding: '10px 18px',
-            display: 'flex', alignItems: 'center', gap: 8,
+            position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 60, display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ab5a0', flexShrink: 0 }}/>
-            <span style={{ fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700, color: 'white' }}>
-              Exploring {activePOI.name} in 3D
-            </span>
-          </div>
-          {/* Exit button */}
-          <button
-            onClick={exit3D}
-            style={{
+            <div style={{
+              background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(42,181,160,0.4)',
+              borderRadius: 12, padding: '10px 18px',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ab5a0', flexShrink: 0 }}/>
+              <span style={{ fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700, color: 'white' }}>
+                Exploring {activePOI.name} in 3D
+              </span>
+            </div>
+            <button onClick={exit3D} style={{
               background: 'rgba(250,248,245,0.92)', backdropFilter: 'blur(16px)',
               border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'none',
               fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700,
               color: '#152238', display: 'flex', alignItems: 'center', gap: 7,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#152238" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M3 12h18M3 6h18M3 18h18"/>
-            </svg>
-            Exit 3D
-          </button>
-        </div>
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#152238" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+              Exit 3D
+            </button>
+          </div>
+
+          {/* 3D controls — right side */}
+          <div style={{
+            position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)',
+            zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8,
+          }}>
+            {/* Tilt up */}
+            <button
+              onClick={() => mapRef.current?.setPitch(Math.min(85, (mapRef.current?.getPitch() || 0) + 10))}
+              title="Tilt up"
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M18 15l-6-6-6 6"/></svg>
+            </button>
+
+            {/* Tilt down */}
+            <button
+              onClick={() => mapRef.current?.setPitch(Math.max(0, (mapRef.current?.getPitch() || 0) - 10))}
+              title="Tilt down"
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
+
+            {/* Rotate left */}
+            <button
+              onClick={() => mapRef.current?.setBearing((mapRef.current?.getBearing() || 0) - 30)}
+              title="Rotate left"
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+
+            {/* Rotate right */}
+            <button
+              onClick={() => mapRef.current?.setBearing((mapRef.current?.getBearing() || 0) + 30)}
+              title="Rotate right"
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            </button>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 6px' }}/>
+
+            {/* Zoom in */}
+            <button
+              onClick={() => mapRef.current?.zoomIn()}
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>+</button>
+
+            {/* Zoom out */}
+            <button
+              onClick={() => mapRef.current?.zoomOut()}
+              style={{
+                width: 40, height: 40, borderRadius: 10, border: 'none', cursor: 'none',
+                background: 'rgba(13,24,41,0.85)', backdropFilter: 'blur(12px)',
+                color: 'white', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}>−</button>
+          </div>
+
+          {/* Bottom hint */}
+          <div style={{
+            position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 60,
+            background: 'rgba(13,24,41,0.7)', backdropFilter: 'blur(12px)',
+            borderRadius: 10, padding: '8px 16px',
+            fontFamily: 'Mulish, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.6)',
+            letterSpacing: '0.05em', whiteSpace: 'nowrap',
+          }}>
+            Drag to pan · Right-click drag to rotate · Scroll to zoom
+          </div>
+        </>
       )}
 
       {/* Country hover popup — sticky, clean dark card */}
