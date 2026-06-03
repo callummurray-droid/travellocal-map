@@ -182,13 +182,7 @@ const FLAG_COLOURS_EXPR = [
 
 // Country audio tracks — add MP3s to /public/audio/
 const COUNTRY_AUDIO = {
-  Italy:    '/audio/italy.mp3',
-  France:   '/audio/france.mp3',
-  Japan:    '/audio/japan.mp3',
-  Morocco:  '/audio/morocco.mp3',
-  Spain:    '/audio/spain.mp3',
-  Greece:   '/audio/greece.mp3',
-  Portugal: '/audio/portugal.mp3',
+  Italy: '/audio/italy.mp3',
 };
 
 export default function MapScene({ visible }) {
