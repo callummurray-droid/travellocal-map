@@ -724,7 +724,19 @@ export default function MapScene({ visible }) {
         },
       });
 
-      // Re-add expert pins WebGL layers
+      // Hover border — flag colour per country (missing after style switch)
+      map.addLayer({
+        id: 'country-borders-hover',
+        type: 'line',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        paint: {
+          'line-color': FLAG_COLOURS_EXPR,
+          'line-width': ['case', ['boolean', ['feature-state', 'hovered'], false], 2, 0],
+          'line-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 0.8, 0],
+          'line-blur': 0,
+        },
+      });
       map.addSource('expert-pins', {
         type: 'geojson',
         data: {
@@ -1003,9 +1015,18 @@ export default function MapScene({ visible }) {
         rect.top + rect.height / 2
       );
     }
+
     const keys = Object.keys(ALL_CONFIG);
     const pick = keys[Math.floor(Math.random() * keys.length)];
-    flyToCountry(pick);
+
+    // If in 3D mode, exit first then fly — wait for style to reload
+    if (is3DRef.current) {
+      exit3D();
+      // Give exit3D time to switch style and restore layers before flying
+      setTimeout(() => flyToCountry(pick), 2500);
+    } else {
+      flyToCountry(pick);
+    }
   };
 
   // Custom cursor tracking for map scene
