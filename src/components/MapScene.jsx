@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { gsap } from 'gsap';
 import { MAPBOX_TOKEN, EXPERT_COUNTRIES, COUNTRY_CONFIG } from '../data/countries';
 import SidePanel from './SidePanel';
+import CountryPopup from './CountryPopup';
 
 // Country card images from Act 1 marquee — used for hover popups
 const COUNTRY_CARDS = {
@@ -111,10 +112,13 @@ const EXPERT_PINS = [
 ];
 
 export default function MapScene({ visible }) {
-  const mapContainer = useRef(null);
-  const mapRef = useRef(null);
-  const markersRef = useRef([]);
-  const pulseRafRef = useRef(null);
+  const mapContainer  = useRef(null);
+  const mapRef        = useRef(null);
+  const markersRef    = useRef([]);
+  const pulseRafRef   = useRef(null);
+  const popupHovered  = useRef(false);
+  const cursorRef     = useRef(null);
+  const hideTimerRef  = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -314,7 +318,10 @@ export default function MapScene({ visible }) {
         }
         hoveredIdRef.current = null;
         map.getCanvas().style.cursor = '';
-        setHoveredCountry(null);
+        // Delay hiding popup — gives mouse time to move onto it
+        hideTimerRef.current = setTimeout(() => {
+          if (!popupHovered.current) setHoveredCountry(null);
+        }, 120);
       });
 
       // Click interaction
@@ -391,105 +398,47 @@ export default function MapScene({ visible }) {
     flyToCountry(pick);
   };
 
+  // Custom cursor tracking for map scene
+  useEffect(() => {
+    if (!visible) return;
+    const cursor = cursorRef.current;
+    const onMove = (e) => {
+      if (cursor) {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top  = e.clientY + 'px';
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-10">
+    <div className="fixed inset-0 z-10" style={{ cursor: 'none' }}>
       {/* Map */}
       <div ref={mapContainer} className="absolute inset-0" />
 
-      {/* Hover popup — uses Act 1 card image, anchored to mouse */}
-      {hoveredCountry && !panelOpen && (() => {
-        const config   = COUNTRY_CONFIG[hoveredCountry.name];
-        const cardSrc  = COUNTRY_CARDS[hoveredCountry.name];
-        const POPUP_W  = 180;
-        const POPUP_H  = cardSrc ? 230 : 160;
-        const PAD      = 16;
-        const vw       = window.innerWidth;
-        const vh       = window.innerHeight;
-
-        let left = hoveredCountry.x + 20;
-        let top  = hoveredCountry.y - POPUP_H / 2;
-        if (left + POPUP_W > vw - PAD) left = hoveredCountry.x - POPUP_W - 20;
-        if (top < PAD) top = PAD;
-        if (top + POPUP_H > vh - PAD) top = vh - POPUP_H - PAD;
-
-        return (
-          <div
-            style={{
-              position: 'absolute', left, top,
-              width: POPUP_W,
-              zIndex: 30,
-              pointerEvents: 'none',
-              animation: 'popupIn 0.2s cubic-bezier(0.34,1.56,0.64,1)',
-            }}
-          >
-            {cardSrc ? (
-              // Countries with a card — show the full card PNG + explore button below
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <img
-                  src={cardSrc}
-                  alt={hoveredCountry.name}
-                  style={{
-                    width: '100%',
-                    borderRadius: 16,
-                    display: 'block',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-                  }}
-                />
-                <button
-                  style={{
-                    display: 'block', width: '100%',
-                    padding: '10px 16px',
-                    fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700,
-                    color: '#152238', textAlign: 'center',
-                    background: 'rgba(255,255,255,0.95)',
-                    border: 'none', borderRadius: 10,
-                    cursor: 'pointer', pointerEvents: 'auto',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                  }}
-                  onClick={() => config && selectCountry(hoveredCountry.name, null)}
-                >
-                  Explore {hoveredCountry.name} →
-                </button>
-              </div>
-            ) : (
-              // Countries without a card — fallback dark popup
-              <div style={{
-                background: 'rgba(13,24,41,0.96)',
-                border: `1.5px solid ${config?.borderColour || 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 14, overflow: 'hidden',
-                boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
-              }}>
-                <div style={{ padding: '10px 12px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={config?.borderColour || '#2ab5a0'} strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  <span style={{ fontFamily: 'Mulish, sans-serif', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
-                    {hoveredCountry.name}
-                  </span>
-                </div>
-                {config?.images?.[0] && (
-                  <div style={{ width: '100%', height: 100, overflow: 'hidden' }}>
-                    <img src={config.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-                  </div>
-                )}
-                <button
-                  style={{
-                    display: 'block', width: '100%', padding: '10px 12px',
-                    fontFamily: 'Mulish, sans-serif', fontSize: 13, fontWeight: 700,
-                    color: 'white', textAlign: 'left', background: 'none', border: 'none',
-                    borderTop: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', pointerEvents: 'auto',
-                  }}
-                  onClick={() => config && selectCountry(hoveredCountry.name, null)}
-                >
-                  Explore {hoveredCountry.name} →
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {/* Country hover popup — proper React component, sticky */}
+      {hoveredCountry && !panelOpen && (
+        <CountryPopup
+          country={hoveredCountry.name}
+          x={hoveredCountry.x}
+          y={hoveredCountry.y}
+          onExplore={() => {
+            const config = COUNTRY_CONFIG[hoveredCountry.name];
+            if (config) selectCountry(hoveredCountry.name, null);
+          }}
+          onMouseEnter={() => {
+            popupHovered.current = true;
+            clearTimeout(hideTimerRef.current);
+          }}
+          onMouseLeave={() => {
+            popupHovered.current = false;
+            setHoveredCountry(null);
+          }}
+        />
+      )}
 
       {/* Bottom search bar */}
       <div className="absolute bottom-8 left-8 z-20" style={{ minWidth: 260 }}>
@@ -568,6 +517,23 @@ export default function MapScene({ visible }) {
         country={selectedCountry?.name}
         config={selectedCountry?.config}
         onClose={closePanel}
+      />
+
+      {/* Custom teal cursor */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: 'fixed',
+          width: 12, height: 12,
+          borderRadius: '50%',
+          background: '#2ab5a0',
+          boxShadow: '0 0 20px 8px rgba(42,181,160,0.35), 0 0 0 1px rgba(42,181,160,0.5)',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 99999,
+          transition: 'width 0.3s cubic-bezier(0.34,1.56,0.64,1), height 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          left: -100, top: -100,
+        }}
       />
     </div>
   );
