@@ -81,6 +81,8 @@ const EXPERT_PINS = [
   { name: 'Madrid, Spain',          coords: [-3.7038,  40.4168] },
   { name: 'Stockholm, Sweden',      coords: [18.0686,  59.3293] },
   { name: 'Zurich, Switzerland',    coords: [8.5417,   47.3769] },
+  { name: 'Paris, France',          coords: [2.3522,   48.8566] },
+  { name: 'London, United Kingdom', coords: [-0.1276,  51.5074] },
   // Middle East & Africa
   { name: 'Amman, Jordan',          coords: [35.9106,  31.9539] },
   { name: 'Marrakech, Morocco',     coords: [-7.9811,  31.6295] },
