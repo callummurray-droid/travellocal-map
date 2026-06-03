@@ -144,7 +144,7 @@ const EXPERT_PINS = [
 
 // Points of interest per country — shown when country is selected
 const COUNTRY_POIS = {
-  Italy:      [{ name: 'Rome',     coords: [12.4964, 41.9028] }, { name: 'Florence',  coords: [11.2558, 43.7696] }, { name: 'Venice',    coords: [12.3155, 45.4408] }, { name: 'Amalfi',   coords: [14.6026, 40.6340] }, { name: 'Dolomites', coords: [11.8000, 46.5000] }],
+  Italy:      [{ name: 'Colosseum, Rome', coords: [12.4922, 41.8902] }, { name: 'Florence',  coords: [11.2558, 43.7696] }, { name: 'Venice',    coords: [12.3155, 45.4408] }, { name: 'Amalfi',   coords: [14.6026, 40.6340] }, { name: 'Dolomites', coords: [11.8000, 46.5000] }],
   Japan:      [{ name: 'Tokyo',    coords: [139.6917, 35.6895] }, { name: 'Kyoto',  coords: [135.7681, 35.0116] }, { name: 'Osaka',    coords: [135.5022, 34.6937] }, { name: 'Mt Fuji',  coords: [138.7274, 35.3606] }],
   Morocco:    [{ name: 'Marrakech',coords: [-7.9811, 31.6295] },  { name: 'Fes',    coords: [-5.0000, 34.0333] },  { name: 'Sahara',   coords: [-4.0000, 30.0000] },  { name: 'Essaouira',coords: [-9.7600, 31.5085] }],
   Spain:      [{ name: 'Barcelona',coords: [2.1734, 41.3851] },   { name: 'Madrid', coords: [-3.7038, 40.4168] },  { name: 'Seville',  coords: [-5.9845, 37.3891] },  { name: 'Granada',  coords: [-3.5986, 37.1773] }],
@@ -508,42 +508,34 @@ export default function MapScene({ visible }) {
     is3DRef.current = true;
     setMode3D(true);
     setActivePOI(poi);
-    stopAudio(); // Pause music during 3D exploration
+    stopAudio();
 
-    // Switch to satellite-streets style for the 3D view
-    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
+    // Use Mapbox Standard style — has photorealistic 3D landmarks (Colosseum, Duomo etc)
+    // and proper building textures with ambient occlusion
+    map.setStyle('mapbox://styles/mapbox/standard');
 
-    // Re-add terrain + buildings once new style loads
     map.once('style.load', () => {
+      // Enable terrain with exaggeration
       map.addSource('mapbox-dem', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
         maxzoom: 14,
       });
-      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.8 });
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
-      map.addLayer({
-        id: 'buildings-3d',
-        source: 'composite',
-        'source-layer': 'building',
-        filter: ['==', 'extrude', 'true'],
-        type: 'fill-extrusion',
-        minzoom: 12,
-        paint: {
-          'fill-extrusion-color': '#aaaaaa',
-          'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'height']],
-          'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'min_height']],
-          'fill-extrusion-opacity': 0.6,
-        },
-      });
+      // Set Standard style config for best 3D quality
+      // Show 3D buildings and landmarks
+      map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+      map.setConfigProperty('basemap', 'showRoadLabels', true);
+      map.setConfigProperty('basemap', 'lightPreset', 'dusk'); // Golden hour lighting
 
-      // Cinematic fly-in after style switch
+      // Cinematic fly-in
       map.flyTo({
         center: poi.coords,
-        zoom: 14.5,
-        pitch: 70,
-        bearing: -25,
+        zoom: 15,
+        pitch: 65,
+        bearing: -20,
         duration: 3500,
         essential: true,
         easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
