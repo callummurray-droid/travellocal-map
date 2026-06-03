@@ -140,7 +140,34 @@ const EXPERT_PINS = [
   { name: 'Wellington, New Zealand',coords: [174.7762,-41.2865] },
 ];
 
-export default function MapScene({ visible }) {
+// Points of interest per country — shown when country is selected
+const COUNTRY_POIS = {
+  Italy:      [{ name: 'Rome',     coords: [12.4964, 41.9028] }, { name: 'Florence',  coords: [11.2558, 43.7696] }, { name: 'Venice',    coords: [12.3155, 45.4408] }, { name: 'Amalfi',   coords: [14.6026, 40.6340] }, { name: 'Dolomites', coords: [11.8000, 46.5000] }],
+  Japan:      [{ name: 'Tokyo',    coords: [139.6917, 35.6895] }, { name: 'Kyoto',  coords: [135.7681, 35.0116] }, { name: 'Osaka',    coords: [135.5022, 34.6937] }, { name: 'Mt Fuji',  coords: [138.7274, 35.3606] }],
+  Morocco:    [{ name: 'Marrakech',coords: [-7.9811, 31.6295] },  { name: 'Fes',    coords: [-5.0000, 34.0333] },  { name: 'Sahara',   coords: [-4.0000, 30.0000] },  { name: 'Essaouira',coords: [-9.7600, 31.5085] }],
+  Spain:      [{ name: 'Barcelona',coords: [2.1734, 41.3851] },   { name: 'Madrid', coords: [-3.7038, 40.4168] },  { name: 'Seville',  coords: [-5.9845, 37.3891] },  { name: 'Granada',  coords: [-3.5986, 37.1773] }],
+  France:     [{ name: 'Paris',    coords: [2.3522, 48.8566] },   { name: 'Nice',   coords: [7.2620, 43.7102] },   { name: 'Bordeaux', coords: [-0.5792, 44.8378] },  { name: 'Lyon',     coords: [4.8357, 45.7640] }],
+  Greece:     [{ name: 'Athens',   coords: [23.7275, 37.9838] },  { name: 'Santorini',coords: [25.4615, 36.3932] },{ name: 'Mykonos', coords: [25.3293, 37.4415] },  { name: 'Crete',    coords: [24.8093, 35.2401] }],
+  Portugal:   [{ name: 'Lisbon',   coords: [-9.1393, 38.7223] },  { name: 'Porto',  coords: [-8.6291, 41.1579] },  { name: 'Algarve', coords: [-8.1237, 37.0179] },  { name: 'Sintra',   coords: [-9.3880, 38.7977] }],
+  Peru:       [{ name: 'Lima',     coords: [-77.0428,-12.0464] }, { name: 'Cusco',  coords: [-71.9785,-13.5320] }, { name: 'Machu Picchu',coords:[-72.5450,-13.1631]}, { name: 'Arequipa', coords: [-71.5375,-16.4090] }],
+  Germany:    [{ name: 'Berlin',   coords: [13.4050, 52.5200] },  { name: 'Munich', coords: [11.5820, 48.1351] },  { name: 'Hamburg',  coords: [9.9937, 53.5511] },   { name: 'Cologne',  coords: [6.9603, 50.9333] }],
+  India:      [{ name: 'New Delhi',coords: [77.2090, 28.6139] },  { name: 'Jaipur', coords: [75.7873, 26.9124] },  { name: 'Mumbai',   coords: [72.8777, 19.0760] },  { name: 'Varanasi', coords: [82.9739, 25.3176] }],
+};
+
+// Fly-to zoom config per country
+const COUNTRY_FLY = {
+  Italy:    { center: [12.5, 42.5], zoom: 5.5 },
+  Japan:    { center: [137.0, 36.5], zoom: 5.0 },
+  Morocco:  { center: [-6.0, 31.5], zoom: 5.5 },
+  Spain:    { center: [-3.5, 40.0], zoom: 5.0 },
+  France:   { center: [2.5, 46.5], zoom: 5.0 },
+  Greece:   { center: [22.5, 39.0], zoom: 5.5 },
+  Portugal: { center: [-8.0, 39.5], zoom: 6.0 },
+  Peru:     { center: [-74.0, -10.0], zoom: 5.0 },
+  Germany:  { center: [10.5, 51.5], zoom: 5.5 },
+  India:    { center: [79.0, 22.0], zoom: 4.5 },
+  default:  { center: null, zoom: 5 },
+};
   const mapContainer  = useRef(null);
   const mapRef        = useRef(null);
   const markersRef    = useRef([]);
@@ -148,6 +175,7 @@ export default function MapScene({ visible }) {
   const popupHovered  = useRef(false);
   const cursorRef     = useRef(null);
   const hideTimerRef  = useRef(null);
+  const poiMarkersRef = useRef([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [searchVal, setSearchVal] = useState('');
@@ -381,12 +409,67 @@ export default function MapScene({ visible }) {
     };
   }, [visible]);
 
+  const clearPOIs = () => {
+    poiMarkersRef.current.forEach(m => m.remove());
+    poiMarkersRef.current = [];
+  };
+
+  const addPOIs = (name) => {
+    clearPOIs();
+    const pois = COUNTRY_POIS[name];
+    if (!pois || !mapRef.current) return;
+    pois.forEach(poi => {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        display: flex; flex-direction: column; align-items: center;
+        pointer-events: none; cursor: default;
+      `;
+      const dot = document.createElement('div');
+      dot.style.cssText = `
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #152238; border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      `;
+      const label = document.createElement('div');
+      label.textContent = poi.name;
+      label.style.cssText = `
+        margin-top: 4px; padding: 2px 7px;
+        background: rgba(21,34,56,0.85); color: white;
+        font-family: Mulish, sans-serif; font-size: 10px; font-weight: 600;
+        border-radius: 4px; white-space: nowrap;
+        backdrop-filter: blur(4px);
+      `;
+      el.appendChild(dot);
+      el.appendChild(label);
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'top' })
+        .setLngLat(poi.coords)
+        .addTo(mapRef.current);
+      poiMarkersRef.current.push(marker);
+    });
+  };
+
   const selectCountry = (name, featureId) => {
     const config = ALL_CONFIG[name];
     setSelectedCountry({ name, config, featureId });
     setPanelOpen(true);
 
-    // Set selected state on map
+    // Fly to country
+    const fly = COUNTRY_FLY[name] || COUNTRY_FLY.default;
+    if (mapRef.current) {
+      // Get fly centre from config coordinates if not in COUNTRY_FLY
+      let center = fly.center;
+      if (!center && config?.coordinates) {
+        const [lat, lng] = config.coordinates.replace(/[°NSEW]/g, '').split(',').map(Number);
+        center = [lng || 0, lat || 0];
+      }
+      if (center) {
+        mapRef.current.flyTo({ center, zoom: fly.zoom || 5, duration: 1400, essential: true });
+      }
+      // Add POI pins after fly completes
+      setTimeout(() => addPOIs(name), 800);
+    }
+
+    // Set selected feature state
     if (mapRef.current && featureId != null) {
       mapRef.current.setFeatureState(
         { source: 'countries', sourceLayer: 'country_boundaries', id: featureId },
@@ -404,6 +487,7 @@ export default function MapScene({ visible }) {
 
   const closePanel = () => {
     setPanelOpen(false);
+    clearPOIs();
     if (mapRef.current && selectedCountry?.featureId != null) {
       mapRef.current.setFeatureState(
         { source: 'countries', sourceLayer: 'country_boundaries', id: selectedCountry.featureId },
