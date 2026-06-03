@@ -310,6 +310,10 @@ export default function MapScene({ visible }) {
         // Convert lng/lat to screen pixel position for popup anchoring
         const point = map.project(e.lngLat);
         setHoveredCountry({ name, x: point.x, y: point.y });
+
+        // Expand cursor over countries
+        const cur = cursorRef.current;
+        if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
       });
 
       map.on('mouseleave', 'country-fills', () => {
@@ -318,7 +322,10 @@ export default function MapScene({ visible }) {
         }
         hoveredIdRef.current = null;
         map.getCanvas().style.cursor = '';
-        // Delay hiding popup — gives mouse time to move onto it
+        // Shrink cursor back
+        const cur = cursorRef.current;
+        if (cur) { cur.style.width = '12px'; cur.style.height = '12px'; }
+        // Delay hiding popup so user can move onto it
         hideTimerRef.current = setTimeout(() => {
           if (!popupHovered.current) setHoveredCountry(null);
         }, 120);
@@ -419,12 +426,13 @@ export default function MapScene({ visible }) {
       {/* Map */}
       <div ref={mapContainer} className="absolute inset-0" />
 
-      {/* Country hover popup — proper React component, sticky */}
+      {/* Country hover popup — sticky, clean dark card */}
       {hoveredCountry && !panelOpen && (
         <CountryPopup
           country={hoveredCountry.name}
           x={hoveredCountry.x}
           y={hoveredCountry.y}
+          config={COUNTRY_CONFIG[hoveredCountry.name]}
           onExplore={() => {
             const config = COUNTRY_CONFIG[hoveredCountry.name];
             if (config) selectCountry(hoveredCountry.name, null);
@@ -432,10 +440,15 @@ export default function MapScene({ visible }) {
           onMouseEnter={() => {
             popupHovered.current = true;
             clearTimeout(hideTimerRef.current);
+            // Expand cursor when over popup
+            const cur = cursorRef.current;
+            if (cur) { cur.style.width = '60px'; cur.style.height = '60px'; }
           }}
           onMouseLeave={() => {
             popupHovered.current = false;
             setHoveredCountry(null);
+            const cur = cursorRef.current;
+            if (cur) { cur.style.width = '12px'; cur.style.height = '12px'; }
           }}
         />
       )}
