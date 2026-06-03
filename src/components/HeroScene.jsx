@@ -166,6 +166,34 @@ export default function HeroScene({ onExplore }) {
     return () => ctx.revert();
   }, []);
 
+  // Magnetic CTA effect
+  useEffect(() => {
+    const cta = document.getElementById('cta-btn');
+    if (!cta) return;
+
+    const STRENGTH = 0.38;
+
+    const onMove = (e) => {
+      const rect = cta.getBoundingClientRect();
+      const dx = e.clientX - (rect.left + rect.width / 2);
+      const dy = e.clientY - (rect.top + rect.height / 2);
+      gsap.to(cta, { x: dx * STRENGTH, y: dy * STRENGTH, duration: 0.35, ease: 'power2.out', overwrite: true });
+      gsap.to(Array.from(cta.children), { x: dx * 0.12, y: dy * 0.12, duration: 0.35, ease: 'power2.out', overwrite: true });
+    };
+
+    const onLeave = () => {
+      gsap.to(cta, { x: 0, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.4)', overwrite: true });
+      gsap.to(Array.from(cta.children), { x: 0, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.4)', overwrite: true });
+    };
+
+    cta.addEventListener('mousemove', onMove);
+    cta.addEventListener('mouseleave', onLeave);
+    return () => {
+      cta.removeEventListener('mousemove', onMove);
+      cta.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
   const handleExplore = () => {
     const tl = gsap.timeline({ onComplete: onExplore });
     tl.to('#cta-btn', { scale: 1.06, duration: 0.12, ease: 'power2.out' })
