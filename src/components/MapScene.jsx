@@ -561,6 +561,7 @@ export default function MapScene({ visible }) {
     itinMarkersRef.current = [];
     if (map) {
       if (map.getLayer('itin-route')) map.removeLayer('itin-route');
+      if (map.getLayer('itin-route-glow')) map.removeLayer('itin-route-glow');
       if (map.getSource('itin-route')) map.removeSource('itin-route');
     }
     setActiveTrip(null);
@@ -604,16 +605,28 @@ export default function MapScene({ visible }) {
         },
       });
 
-      // Dashed line connecting stops
+      // Glow/casing layer underneath
+      map.addLayer({
+        id: 'itin-route-glow',
+        type: 'line',
+        source: 'itin-route',
+        paint: {
+          'line-color': '#2ab5a0',
+          'line-width': 10,
+          'line-opacity': 0.2,
+          'line-blur': 4,
+        },
+      });
+
+      // Solid teal route line on top
       map.addLayer({
         id: 'itin-route',
         type: 'line',
         source: 'itin-route',
         paint: {
           'line-color': '#2ab5a0',
-          'line-width': 2,
-          'line-dasharray': [2, 2],
-          'line-opacity': 0.8,
+          'line-width': 4,
+          'line-opacity': 0.95,
         },
       });
 
