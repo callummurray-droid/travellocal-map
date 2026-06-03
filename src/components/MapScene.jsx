@@ -604,44 +604,45 @@ export default function MapScene({ visible }) {
       canvas.height = mapCanvas.height;
       const ctx = canvas.getContext('2d');
       let dashOffset = 0;
+      let lastTs = null;
+      const DASH_SPEED = 8; // pixels per second — slow and smooth
 
-      const redraw = () => {
+      const drawFrame = (ts) => {
+        if (!itinRafRef.current) return; // stopped
+        if (lastTs !== null) {
+          const dt = (ts - lastTs) / 1000; // seconds since last frame
+          dashOffset = (dashOffset - DASH_SPEED * dt) % 28;
+        }
+        lastTs = ts;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const pts = coords.map(c => { const p = map.project(c); return [p.x, p.y]; });
-        if (pts.length < 2) return;
+        if (pts.length < 2) { itinRafRef.current = requestAnimationFrame(drawFrame); return; }
 
-        // Outer soft glow
-        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(42,181,160,0.15)'; ctx.lineWidth = 32;
-        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+        const draw = (width, style, alpha = 1, dash = [], dashOff = 0) => {
+          ctx.save();
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.strokeStyle = style; ctx.lineWidth = width; ctx.globalAlpha = alpha;
+          if (dash.length) { ctx.setLineDash(dash); ctx.lineDashOffset = dashOff; }
+          ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+          pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1]));
+          ctx.stroke(); ctx.restore();
+        };
 
-        // Mid glow
-        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(42,181,160,0.35)'; ctx.lineWidth = 14;
-        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+        draw(32, 'rgba(42,181,160,0.12)');          // outer soft glow
+        draw(14, 'rgba(42,181,160,0.30)');          // mid glow
+        draw(4,  '#2ab5a0', 1);                     // bright solid core
+        draw(2,  'rgba(255,255,255,0.85)', 1, [12, 16], dashOffset); // slow travelling dash
 
-        // Bright solid core
-        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#2ab5a0'; ctx.lineWidth = 4; ctx.globalAlpha = 1;
-        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
-
-        // Animated white dash travelling along
-        dashOffset = (dashOffset - 1.5) % 28;
-        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
-        ctx.setLineDash([12, 16]); ctx.lineDashOffset = dashOffset;
-        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-        pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.stroke(); ctx.restore();
-
-        itinRafRef.current = requestAnimationFrame(redraw);
+        itinRafRef.current = requestAnimationFrame(drawFrame);
       };
 
-      map.on('move', redraw);
-      map.on('zoom', redraw);
-      redraw();
+      // Redraw canvas position when map pans (no new RAF — existing loop handles it)
+      const onMapRender = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      };
+
+      itinRafRef.current = requestAnimationFrame(drawFrame);
 
       // Numbered stop markers
       stops.forEach((stop, i) => {
