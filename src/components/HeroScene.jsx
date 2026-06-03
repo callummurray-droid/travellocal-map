@@ -12,12 +12,12 @@ const ALL_CARDS = [
 ];
 
 const STAMP_POSITIONS = [
-  { id: 'turkey',      src: '/stamps/turkey.png',      top: '3%',  left: '-2%',  width: 220, rotate: -10 },
-  { id: 'japan',       src: '/stamps/japan.png',        top: '26%', left: '-2%',  width: 250, rotate: -6  },
-  { id: 'usa',         src: '/stamps/usa.png',          top: '60%', left: '-3%',  width: 240, rotate:  7  },
-  { id: 'switzerland', src: '/stamps/switzerland.png',  top: '2%',  right: '14%', width: 210, rotate:  5  },
-  { id: 'brazil',      src: '/stamps/brazil.png',       top: '6%',  right: '-2%', width: 235, rotate:  9  },
-  { id: 'mexico',      src: '/stamps/mexico.png',       top: '55%', right: '-2%', width: 245, rotate: -7  },
+  { id: 'turkey',      src: '/stamps/turkey.png',      top: '-2%',  left: '-3%',   width: 155, rotate: -5  },
+  { id: 'japan',       src: '/stamps/japan.png',        top: '20%',  left: '-4%',   width: 300, rotate: -8  },
+  { id: 'usa',         src: '/stamps/usa.png',          top: '62%',  left: '-4%',   width: 280, rotate:  8  },
+  { id: 'switzerland', src: '/stamps/switzerland.png',  top: '5%',   left: '63%',   width: 220, rotate:  3  },
+  { id: 'brazil',      src: '/stamps/brazil.png',       top: '8%',   right: '-3%',  width: 265, rotate:  5  },
+  { id: 'mexico',      src: '/stamps/mexico.png',       top: '58%',  right: '-4%',  width: 320, rotate: -3  },
 ];
 
 export default function HeroScene({ onExplore }) {
