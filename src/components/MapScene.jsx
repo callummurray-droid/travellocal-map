@@ -505,18 +505,44 @@ export default function MapScene({ visible }) {
     setMode3D(true);
     setActivePOI(poi);
 
-    // Enable terrain
-    map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.8 });
+    // Switch to satellite-streets style for the 3D view
+    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
 
-    // Cinematic fly-in — low angle, tilted, dramatic
-    map.flyTo({
-      center: poi.coords,
-      zoom: 14.5,
-      pitch: 70,
-      bearing: -25,
-      duration: 3500,
-      essential: true,
-      easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
+    // Re-add terrain + buildings once new style loads
+    map.once('style.load', () => {
+      map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.8 });
+
+      map.addLayer({
+        id: 'buildings-3d',
+        source: 'composite',
+        'source-layer': 'building',
+        filter: ['==', 'extrude', 'true'],
+        type: 'fill-extrusion',
+        minzoom: 12,
+        paint: {
+          'fill-extrusion-color': '#aaaaaa',
+          'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'height']],
+          'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'min_height']],
+          'fill-extrusion-opacity': 0.6,
+        },
+      });
+
+      // Cinematic fly-in after style switch
+      map.flyTo({
+        center: poi.coords,
+        zoom: 14.5,
+        pitch: 70,
+        bearing: -25,
+        duration: 3500,
+        essential: true,
+        easing: (t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
+      });
     });
   };
 
@@ -527,18 +553,37 @@ export default function MapScene({ visible }) {
     setMode3D(false);
     setActivePOI(null);
 
-    // Disable terrain
-    map.setTerrain(null);
-
-    // Fly back out to country level
     const fly = selectedCountry ? (COUNTRY_FLY[selectedCountry.name] || COUNTRY_FLY.default) : COUNTRY_FLY.default;
-    map.flyTo({
-      center: fly.center || [12, 48],
-      zoom: fly.zoom || 5,
-      pitch: 0,
-      bearing: 0,
-      duration: 2000,
-      essential: true,
+
+    // Switch back to dark style
+    map.setStyle('mapbox://styles/mapbox/dark-v11');
+
+    // Restore dark style layers + fly back out once loaded
+    map.once('style.load', () => {
+      map.setPaintProperty('background', 'background-color', '#0d1829');
+      map.setPaintProperty('water', 'fill-color', '#0a1525');
+
+      // Re-add DEM source (no terrain active)
+      map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+
+      map.flyTo({
+        center: fly.center || [12, 48],
+        zoom: fly.zoom || 5,
+        pitch: 0,
+        bearing: 0,
+        duration: 2000,
+        essential: true,
+      });
+
+      // Re-add POI pins for selected country
+      if (selectedCountry) {
+        setTimeout(() => addPOIs(selectedCountry.name), 600);
+      }
     });
   };
 
