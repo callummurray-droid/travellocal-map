@@ -1076,9 +1076,9 @@ export default function MapScene({ visible }) {
             </button>
           </div>
 
-          {/* 3D controls — right side */}
+          {/* 3D controls — left side */}
           <div style={{
-            position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)',
+            position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)',
             zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8,
           }}>
             {/* Tilt up */}
